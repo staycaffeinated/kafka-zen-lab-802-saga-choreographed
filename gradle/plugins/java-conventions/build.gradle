@@ -1,0 +1,10 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+dependencies {
+    implementation("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:7.4.0.8496")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:8.9.0")
+    implementation("se.solrike.sonarlint:sonarlint-gradle-plugin:2.2.0")
+    implementation("com.google.cloud.tools:jib-gradle-plugin:3.5.4")
+}

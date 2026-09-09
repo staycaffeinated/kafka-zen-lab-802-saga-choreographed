@@ -1,0 +1,163 @@
+# -------------------------------------------------------------------------------------------------------
+# Custom properties (not part of Spring)
+# These property names (and values, of course) can be changed to your liking.
+# -------------------------------------------------------------------------------------------------------
+application:
+  default-page-limit: 25
+  saga:
+    topics:
+      order-commands: kafka-zen.lab-801.saga.order.commands
+      payment-commands: kafka-zen.lab-801.saga.payment.commands
+      inventory-commands: kafka-zen.lab-801.saga.inventory.commands
+      shipping-commands: kafka-zen.lab-801.saga.shipping.commands
+      orchestrator-replies: kafka-zen.lab-801.saga.orchestrator.replies
+
+# -------------------------------------------------------------------------------------------------------
+# Spring properties
+# -------------------------------------------------------------------------------------------------------
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,application/javascript,application/json
+    # responses over 1K in size are gzip-compressed to reduce bandwidth
+    min-response-size: 1024
+  servlet:
+    context-path: /
+
+# -------------------------------------------------------------------------
+# OpenApi/SpringDoc/Swagger properties
+# -------------------------------------------------------------------------
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  model-converters:
+    pageable-converter:
+      enabled: true
+  swagger-ui:
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+
+# -------------------------------------------------------------------------
+# Actuator properties
+# -------------------------------------------------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+
+# -------------------------------------------------------------------------
+# Spring properties
+# -------------------------------------------------------------------------
+
+spring:
+  application:
+    name: order-service
+    schema-name: order_service
+
+  # Modify these as desired.
+  jackson:
+    date-format: "yyyy-MM-dd HH:mm:ss"
+    serialization:
+      indent-output: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  jpa:
+    show-sql: true
+    database: POSTGRESQL
+    properties:
+      hibernate:
+        default_schema: "${spring.application.schema-name}"
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  datasource:
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:NOT_SET}
+    # -------------------------------------------------------------------------------------------
+    # Hikari connection pool properties. See: https://github.com/brettwooldridge/HikariCP
+    # -------------------------------------------------------------------------------------------
+    hikari:
+      connection-timeout: 2000
+      maximum-pool-size: 20
+      minimum-idle: 2
+      pool-name: "springboot-hikari-cp"
+      max-lifetime: 1000000  # 1000 seconds; keep well below DB wait_timeout
+      data-source-properties:
+        cachePrepStmts: true
+        # Identifies the schema to be set on the search path. This schema is used to resolve unqualified object names
+        # See: https://jdbc.postgresql.org/documentation/publicapi/org/postgresql/PGProperty.html#CURRENT_SCHEMA
+        currentSchema: "${spring.application.schema-name}"
+        # Size of the prepared statement cache
+        prepStmtCacheSize: 250
+        # Maximum length of a statement the driver will cache
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchStatements: true
+        cacheResultsSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+        # Identifies which service the connection is for.
+        # See: https://jdbc.postgresql.org/documentation/publicapi/org/postgresql/PGProperty.html#APPLICATION_NAME
+        ApplicationName: "${spring.application.name}"
+
+  flyway:
+    schemas: "${spring.application.schema-name}"
+
+  # -------------------------------------------------------------------------------------------
+  # Kafka
+  # -------------------------------------------------------------------------------------------
+  kafka:
+    bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS:NOT_SET}"
+    consumer:
+      auto-commit-interval: "1s"
+      bootstrap-servers: "${spring.kafka.bootstrap-servers}"
+      client-id: "${spring.application.name}-${HOSTNAME:localhost}"
+      enable-auto-commit: false
+      group-id: "${spring.application.name}"
+      key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+      value-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+    producer:
+      bootstrap-servers: "${spring.kafka.bootstrap-servers}"
+      key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      value-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      properties:
+        acks: "all"
+        retries: 10
+        retry.backoff.ms: "1000"
+    listener:
+      client-id: "${spring.application.name}"
+      concurrency: 2
+      missing-topics-fatal: false
+
+  # -------------------------------------------------------------------------
+  # Threading
+  # -------------------------------------------------------------------------
+  threads:
+    virtual:
+      enabled: true
+
+# -------------------------------------------------------------------------
+# Logging
+# -------------------------------------------------------------------------
+logging:
+  level:
+    root: INFO

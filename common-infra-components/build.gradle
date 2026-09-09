@@ -1,0 +1,65 @@
+plugins {
+  id 'buildlogic.library-conventions'
+  alias(libs.plugins.dependency.management)
+  //alias(libs.plugins.versions)
+  alias(libs.plugins.lombok.plugin)
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.springBoot.get()}"
+  }
+}
+
+dependencies {
+
+  api(project(":common-application-components"))
+  api(project(":common-domain-components"))
+
+  // Note: do not use spring-boot-starter's here. The application main class is not
+  // part of this module, so starter jars will cause build issues.
+  implementation libs.spring.boot.autoconfigure
+  implementation libs.spring.boot.webmvc
+  implementation libs.spring.boot.data.jpa
+  implementation libs.jackson.core
+  implementation libs.jackson.databind
+  implementation libs.swagger.annotations
+  implementation libs.jakarta.validation.api
+  implementation libs.jakarta.servlet.api
+  implementation libs.jakarta.persistence.api
+  implementation libs.jackson.core
+  implementation libs.jackson.databind
+
+  testImplementation(platform(libs.junit.bom))
+  testImplementation libs.assertJ
+  testImplementation libs.datafaker
+  testImplementation libs.junit.jupiter
+  testImplementation libs.junit.platform.launcher
+  testImplementation libs.jakarta.persistence.api
+  testImplementation libs.junit.platform.launcher
+  testImplementation libs.spring.boot.starter.test
+  testImplementation libs.spring.boot.starter.validation
+  testImplementation libs.spring.boot.webmvc.test
+
+}
+
+version = '1.0.0'
+
+// --------------------------------------------------------------------------------
+// Sonar configuration
+// --------------------------------------------------------------------------------
+def ignoredClasses =
+        // Ignore simple Record classes
+        "**/SpringProfiles.java" +
+        ",**/DateTimeFormatConfiguration.java" +
+        ",**/JacksonConfiguration.java" +
+        ",**/LocalDateConverter.java" +
+        ",**/ResourceIdSupplierConfiguration.java"
+
+
+sonar {
+  properties {
+    property("sonar.coverage.exclusions", ignoredClasses)
+
+  }
+}

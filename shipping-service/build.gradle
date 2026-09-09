@@ -1,0 +1,124 @@
+plugins {
+    id 'buildlogic.application-conventions'
+    id 'buildlogic.integration-test'
+    id 'jacoco-report-aggregation'
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.dependency.management)
+    alias(libs.plugins.versions)
+    alias(libs.plugins.lombok.plugin)
+}
+
+version='1.0.0'
+
+
+// --------------------------------------------------------------------------------
+// Dependencies
+// --------------------------------------------------------------------------------
+dependencies {
+    // enable Mockito Java Agents
+    mockitoAgent("org.mockito:mockito-core") { transitive = false }
+
+    annotationProcessor libs.spring.boot.config.processor
+
+    developmentOnly libs.spring.devtools
+
+    api(project(":common-adapter-components"))
+    api(project(":common-application-components"))
+    api(project(":common-infra-components"))
+    api(project(":common-domain-components"))
+
+    implementation libs.spring.boot.autoconfigure
+    implementation libs.spring.boot.starter.actuator
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.spring.boot.starter.validation
+    implementation libs.spring.boot.starter.flyway
+    implementation libs.jakarta.persistence.api
+    implementation libs.spring.boot.starter.hateoas
+    implementation libs.rsql.jpa.spring.boot.starter
+    implementation libs.jackson.core
+    implementation libs.jackson.databind
+    implementation libs.swagger.annotations
+    implementation libs.openapi.starter.webmvc.ui
+    implementation libs.flyway.core
+    implementation libs.spring.boot.starter.kafka
+    implementation libs.apache.kafka.streams
+    implementation libs.jackson.datatype.jsr310
+
+    // Optional: This reports out-of-date property names
+    runtimeOnly libs.spring.boot.properties.migrator
+
+    runtimeOnly libs.postgresql
+    runtimeOnly libs.flyway.database.postgresql
+    testImplementation libs.archunit.junit5
+    testImplementation libs.assertJ
+    testImplementation libs.datafaker
+    testImplementation libs.spring.boot.starter.test
+    testImplementation libs.junit.jupiter
+    testImplementation libs.spring.boot.starter.webmvc.test
+    testImplementation libs.spring.boot.starter.data.jpa.test
+    testImplementation libs.spring.boot.starter.jdbc.test
+    testImplementation libs.spring.boot.test.autoconfigure
+    testImplementation libs.spring.kafka.test
+    testImplementation libs.apache.kafka.streams.test.utils
+    testImplementation libs.spring.boot.starter.flyway.test
+    testImplementation libs.flyway.spring.test
+    testImplementation libs.flyway.test
+
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation libs.spring.boot.testcontainers
+    testImplementation libs.spring.devtools
+    testImplementation libs.testcontainers.jupiter
+
+    testImplementation libs.testcontainers.postgres
+        testImplementation libs.testcontainers.kafka
+    testFixturesImplementation libs.jakarta.persistence.api
+    testFixturesImplementation libs.datafaker
+}
+// --------------------------------------------------------------------------------
+// Jib specific configuration for this application
+// --------------------------------------------------------------------------------
+jib {
+    dockerClient {
+        executable = project.findProperty('dockerExecutable') ?: '/usr/local/bin/docker'
+    }
+    from {
+        // Any java version compatible with Spring Boot 4.x should work
+        // To run on Windows use, for example: 'eclipse-temurin:21-jre-windowsservercore'
+        image = 'eclipse-temurin:25-jre-jammy'
+        platforms {
+            platform {
+                os = 'linux'
+                architecture = 'arm64'
+           }
+           platform {
+                os = 'linux'
+                architecture = 'amd64'
+           }
+        }
+    }
+    to {
+        image = 'kafka-zen-lab-801-shipping-service'
+        tags = [ 'latest', version ]
+    }
+    container {
+        format = 'OCI'
+    }
+}
+
+// --------------------------------------------------------------------------------
+// Sonar configuration
+// --------------------------------------------------------------------------------
+def ignoredClasses =
+        "**/ShippingService.java" +
+        ",**/KafkaConsumerConfiguration.java"
+
+sonar {
+    properties {
+        property "sonar.projectName", "kafka-zen-lab-801-shipping-service"
+        property "sonar.projectKey", "kafka-zen-lab-801-shipping-service"
+        property "sonar.gradle.skipCompile", "true"
+        property("sonar.coverage.exclusions", ignoredClasses)
+
+    }
+}
