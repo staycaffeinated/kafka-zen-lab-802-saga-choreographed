@@ -8,6 +8,4 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 public record CreateOrderItemRequest(
-        @NotBlank String productId,
-        @Positive int quantity,
-        @Positive BigDecimal unitPrice) {}
+        @NotBlank String productId, @Positive int quantity, @Positive BigDecimal unitPrice) {}

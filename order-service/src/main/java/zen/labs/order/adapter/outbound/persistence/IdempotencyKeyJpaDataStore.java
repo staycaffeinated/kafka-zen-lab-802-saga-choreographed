@@ -16,6 +16,8 @@ import zen.labs.order.application.port.outbound.IdempotencyKeyStore;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings({"java:S7467" // sonar-lint issue with Java 25 prevents using this style
+})
 public class IdempotencyKeyJpaDataStore implements IdempotencyKeyStore {
 
     private final IdempotencyKeyRepository repository;
@@ -28,7 +30,7 @@ public class IdempotencyKeyJpaDataStore implements IdempotencyKeyStore {
         entity.setCreatedAt(Instant.now());
         try {
             repository.save(entity);
-        } catch (DataIntegrityViolationException _) {
+        } catch (DataIntegrityViolationException e) {
             // Concurrent request with the same key already saved — safe to ignore.
             log.warn("Idempotency key already stored (concurrent request): key={}", key);
         }

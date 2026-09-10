@@ -91,7 +91,8 @@ class OrderControllerTest {
         @DisplayName("should return 201 and response body when request is valid")
         void shouldReturn201WithResponseBodyForValidRequest() throws Exception {
             // Given
-            var requestBody = """
+            var requestBody =
+                    """
                     {
                         "customerId": "customer-001",
                         "items": [
@@ -134,7 +135,8 @@ class OrderControllerTest {
         @DisplayName("should pass Idempotency-Key header to use case when provided")
         void shouldPassIdempotencyKeyToUseCase() throws Exception {
             // Given
-            var requestBody = """
+            var requestBody =
+                    """
                     {
                         "customerId": "customer-001",
                         "items": [{"productId": "product-A", "quantity": 1, "unitPrice": 10.00}],
@@ -168,7 +170,8 @@ class OrderControllerTest {
         @DisplayName("should pass null idempotency key when header is absent")
         void shouldPassNullIdempotencyKeyWhenHeaderAbsent() throws Exception {
             // Given
-            var requestBody = """
+            var requestBody =
+                    """
                     {
                         "customerId": "customer-001",
                         "items": [{"productId": "product-A", "quantity": 1, "unitPrice": 10.00}],
@@ -208,22 +211,34 @@ class OrderControllerTest {
 
         static Stream<Arguments> invalidPlaceOrderRequests() {
             return Stream.of(
-                    Arguments.of("blank customerId", """
+                    Arguments.of(
+                            "blank customerId",
+                            """
                             {"customerId":"","items":[{"productId":"product-A","quantity":1,"unitPrice":10.00}],"shippingAddress":"42 Elm Street"}
                             """),
-                    Arguments.of("empty items list", """
+                    Arguments.of(
+                            "empty items list",
+                            """
                             {"customerId":"customer-001","items":[],"shippingAddress":"42 Elm Street"}
                             """),
-                    Arguments.of("blank shippingAddress", """
+                    Arguments.of(
+                            "blank shippingAddress",
+                            """
                             {"customerId":"customer-001","items":[{"productId":"product-A","quantity":1,"unitPrice":10.00}],"shippingAddress":""}
                             """),
-                    Arguments.of("zero item quantity", """
+                    Arguments.of(
+                            "zero item quantity",
+                            """
                             {"customerId":"customer-001","items":[{"productId":"product-A","quantity":0,"unitPrice":10.00}],"shippingAddress":"42 Elm Street"}
                             """),
-                    Arguments.of("zero item unitPrice", """
+                    Arguments.of(
+                            "zero item unitPrice",
+                            """
                             {"customerId":"customer-001","items":[{"productId":"product-A","quantity":1,"unitPrice":0.00}],"shippingAddress":"42 Elm Street"}
                             """),
-                    Arguments.of("blank item productId", """
+                    Arguments.of(
+                            "blank item productId",
+                            """
                             {"customerId":"customer-001","items":[{"productId":"","quantity":1,"unitPrice":10.00}],"shippingAddress":"42 Elm Street"}
                             """));
         }

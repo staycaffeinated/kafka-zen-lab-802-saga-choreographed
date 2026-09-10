@@ -28,6 +28,8 @@ import zen.labs.domain.common.ResourceIdFormat;
  * See https://metebalci.com/blog/everything-about-javas-securerandom/
  *
  */
+@SuppressWarnings({"java:S7467" // sonar-lint issue with Java 25 prevents using this style
+})
 public class ResourceIdGenerator implements ResourceIdSupplier {
     private final SecureRandom random;
 
@@ -78,7 +80,7 @@ public class ResourceIdGenerator implements ResourceIdSupplier {
         SecureRandom sr;
         try {
             sr = SecureRandom.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException _) {
+        } catch (NoSuchAlgorithmException e) {
             sr = new SecureRandom();
         }
         random = sr;
