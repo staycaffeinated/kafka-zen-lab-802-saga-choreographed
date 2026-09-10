@@ -8,7 +8,6 @@ import zen.labs.application.common.exceptions.ResourceNotFoundException;
 import zen.labs.order.application.port.inbound.HandleSagaEventUseCase;
 import zen.labs.order.application.port.outbound.OrderDataStore;
 import zen.labs.order.domain.Order;
-import zen.labs.order.domain.OrderStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -19,15 +18,15 @@ public class SagaEventHandler implements HandleSagaEventUseCase {
 
     @Transactional
     public void onInventoryReservationFailed(String orderId) {
-        updateStatus(orderId, OrderStatus.CANCELLED);
+        orderDataStore.update(requireOrder(orderId).cancel());
         log.info("Order CANCELLED (inventory failed): orderId={}", orderId);
     }
 
     @Transactional
     public void onInventoryReleased(String orderId) {
         var order = requireOrder(orderId);
-        if (order.getStatus() != OrderStatus.CONFIRMED) {
-            orderDataStore.update(order.withStatus(OrderStatus.CANCELLED));
+        if (!order.isConfirmed()) {
+            orderDataStore.update(order.cancel());
             log.info("Order CANCELLED (inventory released): orderId={}", orderId);
         }
     }
@@ -35,14 +34,10 @@ public class SagaEventHandler implements HandleSagaEventUseCase {
     @Transactional
     public void onShipmentCreated(String orderId) {
         var order = requireOrder(orderId);
-        if (order.getStatus() == OrderStatus.CONFIRMING) {
-            orderDataStore.update(order.withStatus(OrderStatus.CONFIRMED));
+        if (order.isConfirming()) {
+            orderDataStore.update(order.confirm());
             log.info("Order CONFIRMED: orderId={}", orderId);
         }
-    }
-
-    private void updateStatus(String orderId, OrderStatus status) {
-        orderDataStore.update(requireOrder(orderId).withStatus(status));
     }
 
     private Order requireOrder(String orderId) {

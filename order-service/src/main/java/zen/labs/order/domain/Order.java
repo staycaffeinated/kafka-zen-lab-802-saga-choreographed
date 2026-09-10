@@ -29,4 +29,33 @@ public class Order {
                 .map(i -> i.unitPrice().multiply(BigDecimal.valueOf(i.quantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public Order startCancellation() {
+        if (status != OrderStatus.CONFIRMING) {
+            throw new IllegalStateException("Cannot start cancellation for order in status: " + status);
+        }
+        return withStatus(OrderStatus.CANCELLING);
+    }
+
+    public Order cancel() {
+        if (status != OrderStatus.CONFIRMING && status != OrderStatus.CANCELLING) {
+            throw new IllegalStateException("Cannot cancel order in status: " + status);
+        }
+        return withStatus(OrderStatus.CANCELLED);
+    }
+
+    public Order confirm() {
+        if (status != OrderStatus.CONFIRMING) {
+            throw new IllegalStateException("Cannot confirm order in status: " + status);
+        }
+        return withStatus(OrderStatus.CONFIRMED);
+    }
+
+    public boolean isConfirming() {
+        return status == OrderStatus.CONFIRMING;
+    }
+
+    public boolean isConfirmed() {
+        return status == OrderStatus.CONFIRMED;
+    }
 }

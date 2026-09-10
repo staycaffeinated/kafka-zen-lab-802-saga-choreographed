@@ -9,7 +9,6 @@ import zen.labs.application.common.exceptions.UnprocessableRequestException;
 import zen.labs.order.application.port.inbound.CancelOrderUseCase;
 import zen.labs.order.application.port.outbound.OrderDataStore;
 import zen.labs.order.application.port.outbound.OrderEventPublisher;
-import zen.labs.order.domain.OrderStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -25,10 +24,10 @@ public class CancelOrderService implements CancelOrderUseCase {
         var order = orderDataStore
                 .findByResourceId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-        if (order.getStatus() != OrderStatus.CONFIRMING) {
+        if (!order.isConfirming()) {
             throw new UnprocessableRequestException("Order cannot be cancelled in status: " + order.getStatus());
         }
-        orderDataStore.update(order.withStatus(OrderStatus.CANCELLING));
+        orderDataStore.update(order.startCancellation());
         eventPublisher.publishCancellationRequested(orderId);
         log.info("Order cancellation requested: orderId={}", orderId);
     }
