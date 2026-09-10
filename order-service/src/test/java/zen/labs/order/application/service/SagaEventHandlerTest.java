@@ -1,6 +1,7 @@
 package zen.labs.order.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import zen.labs.application.common.exceptions.ResourceNotFoundException;
 import zen.labs.order.application.port.outbound.OrderDataStore;
 import zen.labs.order.domain.Order;
 import zen.labs.order.domain.OrderStatus;
@@ -59,6 +61,17 @@ class SagaEventHandlerTest {
             assertThat(captor.getValue().getStatus()).isEqualTo(OrderStatus.CANCELLED);
             assertThat(captor.getValue().getResourceId()).isEqualTo(ORDER_ID);
         }
+
+        @Test
+        @DisplayName("should throw ResourceNotFoundException when order not found")
+        void shouldThrow_whenOrderNotFound() {
+            when(orderDataStore.findByResourceId(ORDER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> handler.onInventoryReservationFailed(ORDER_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(orderDataStore, never()).update(any());
+        }
     }
 
     @Nested
@@ -101,6 +114,17 @@ class SagaEventHandlerTest {
 
             verify(orderDataStore, never()).update(any());
         }
+
+        @Test
+        @DisplayName("should throw ResourceNotFoundException when order not found")
+        void shouldThrow_whenOrderNotFound() {
+            when(orderDataStore.findByResourceId(ORDER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> handler.onInventoryReleased(ORDER_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(orderDataStore, never()).update(any());
+        }
     }
 
     @Nested
@@ -127,6 +151,16 @@ class SagaEventHandlerTest {
                     .thenReturn(Optional.of(orderWithStatus(OrderStatus.CANCELLING)));
 
             handler.onShipmentCreated(ORDER_ID);
+
+            verify(orderDataStore, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("should throw ResourceNotFoundException when order not found")
+        void shouldThrow_whenOrderNotFound() {
+            when(orderDataStore.findByResourceId(ORDER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> handler.onShipmentCreated(ORDER_ID)).isInstanceOf(ResourceNotFoundException.class);
 
             verify(orderDataStore, never()).update(any());
         }

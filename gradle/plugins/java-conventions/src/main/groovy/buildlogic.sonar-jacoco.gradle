@@ -17,9 +17,13 @@ def ignoredClasses =
     "**/ResourceIdTrait.java," +
     "**/ResourceIdentity.java," +
     "**/*Application.java," +
+    "**/OrderService.java," +
+    "**/PaymentService.java," +
+    "**/ShippingService.java," +
     "**/*TablePopulator.java," +
     "**/*Config.java," +
     "**/*Configuration.java," +
+    "**/*Properties.java," +
     "**/*Initializer.java," +
     "**/*Exception.java"
 

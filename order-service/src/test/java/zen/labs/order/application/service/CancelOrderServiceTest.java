@@ -89,6 +89,17 @@ class CancelOrderServiceTest {
         }
 
         @Test
+        @DisplayName("should throw UnprocessableRequestException when order is CANCELLING")
+        void shouldReject_whenAlreadyCancelling() {
+            when(orderDataStore.findByResourceId(ORDER_ID))
+                    .thenReturn(Optional.of(orderWithStatus(OrderStatus.CANCELLING)));
+
+            assertThatThrownBy(() -> service.cancelOrder(ORDER_ID)).isInstanceOf(UnprocessableRequestException.class);
+
+            verify(eventPublisher, never()).publishCancellationRequested(any());
+        }
+
+        @Test
         @DisplayName("should throw ResourceNotFoundException when order not found")
         void shouldThrow_whenOrderNotFound() {
             when(orderDataStore.findByResourceId(ORDER_ID)).thenReturn(Optional.empty());
