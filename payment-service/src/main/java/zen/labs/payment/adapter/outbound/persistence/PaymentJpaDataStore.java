@@ -23,14 +23,14 @@ public class PaymentJpaDataStore implements PaymentDataStore {
     }
 
     @Override
-    public Optional<Payment> findBySagaId(String sagaId) {
-        return repository.findBySagaId(sagaId).map(this::toDomain);
+    public Optional<Payment> findByOrderId(String orderId) {
+        return repository.findByOrderId(orderId).map(this::toDomain);
     }
 
     @Override
     public Optional<Payment> update(Payment domain) {
         return repository
-                .findBySagaId(domain.getSagaId())
+                .findByOrderId(domain.getOrderId())
                 .map(entity -> {
                     entity.setStatus(domain.getStatus());
                     return repository.save(entity);
@@ -40,7 +40,6 @@ public class PaymentJpaDataStore implements PaymentDataStore {
 
     private Payment toDomain(PaymentJpaEntity e) {
         return Payment.builder()
-                .sagaId(e.getSagaId())
                 .orderId(e.getOrderId())
                 .amount(e.getAmount())
                 .status(e.getStatus())
@@ -50,7 +49,6 @@ public class PaymentJpaDataStore implements PaymentDataStore {
 
     private PaymentJpaEntity toEntity(Payment d) {
         var e = new PaymentJpaEntity();
-        e.setSagaId(d.getSagaId());
         e.setOrderId(d.getOrderId());
         e.setAmount(d.getAmount());
         e.setStatus(d.getStatus());

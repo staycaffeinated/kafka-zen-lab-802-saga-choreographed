@@ -6,8 +6,9 @@ application:
   default-page-limit: 25
   saga:
     topics:
-      commands: kafka-zen.lab-801.saga.inventory.commands
-      orchestrator-replies: kafka-zen.lab-801.saga.orchestrator.replies
+      inventory-events: kafka-zen.lab-802.saga.inventory.events
+      order-events: kafka-zen.lab-802.saga.order.events
+      payment-events: kafka-zen.lab-802.saga.payment.events
 
 # -------------------------------------------------------------------------------------------------------
 # Spring properties

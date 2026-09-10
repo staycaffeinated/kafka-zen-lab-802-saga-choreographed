@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import zen.labs.inventory.adapter.outbound.persistence.entity.InventoryReservationJpaEntity;
 
 public interface InventoryReservationRepository extends JpaRepository<InventoryReservationJpaEntity, Long> {
-    Optional<InventoryReservationJpaEntity> findBySagaId(String sagaId);
+    Optional<InventoryReservationJpaEntity> findByOrderId(String orderId);
 }

@@ -9,7 +9,7 @@ import zen.labs.payment.domain.Payment;
 public interface PaymentDataStore {
     Payment save(Payment payment);
 
-    Optional<Payment> findBySagaId(String sagaId);
+    Optional<Payment> findByOrderId(String orderId);
 
     Optional<Payment> update(Payment payment);
 }

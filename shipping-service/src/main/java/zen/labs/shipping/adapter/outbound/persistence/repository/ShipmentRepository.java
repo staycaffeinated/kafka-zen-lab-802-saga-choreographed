@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import zen.labs.shipping.adapter.outbound.persistence.entity.ShipmentJpaEntity;
 
 public interface ShipmentRepository extends JpaRepository<ShipmentJpaEntity, Long> {
-    Optional<ShipmentJpaEntity> findBySagaId(String sagaId);
+    Optional<ShipmentJpaEntity> findByOrderId(String orderId);
 }

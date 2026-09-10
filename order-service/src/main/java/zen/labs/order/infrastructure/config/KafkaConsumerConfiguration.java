@@ -1,6 +1,3 @@
-/*
- * Copyright 2026 [CopyrightOwner]
- */
 package zen.labs.order.infrastructure.config;
 
 import lombok.extern.slf4j.Slf4j;

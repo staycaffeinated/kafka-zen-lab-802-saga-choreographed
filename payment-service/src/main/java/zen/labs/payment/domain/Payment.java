@@ -12,7 +12,6 @@ import lombok.With;
 @Getter
 @Builder
 public class Payment {
-    private final String sagaId;
     private final String orderId;
     private final BigDecimal amount;
 

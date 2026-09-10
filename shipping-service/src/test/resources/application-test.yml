@@ -1,3 +1,10 @@
+application:
+  saga:
+    topics:
+      shipping-events: kafka-zen.lab-802.saga.shipping.events
+      payment-events: kafka-zen.lab-802.saga.payment.events
+      order-events: kafka-zen.lab-802.saga.order.events
+
 spring:
     config:
         activate:

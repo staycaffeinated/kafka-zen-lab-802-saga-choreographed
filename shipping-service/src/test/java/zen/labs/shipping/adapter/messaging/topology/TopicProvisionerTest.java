@@ -44,7 +44,11 @@ class TopicProvisionerTest {
         mockedAdminClient = mockStatic(AdminClient.class);
         mockedAdminClient.when(() -> AdminClient.create(any(Map.class))).thenReturn(adminClient);
 
-        topicProvisioner = new TopicProvisioner(kafkaAdmin, "saga.shipping.commands", "saga.orchestrator.replies");
+        topicProvisioner = new TopicProvisioner(
+                kafkaAdmin,
+                "kafka-zen.lab-802.saga.shipping.events",
+                "kafka-zen.lab-802.saga.payment.events",
+                "kafka-zen.lab-802.saga.order.events");
     }
 
     @AfterEach
@@ -68,6 +72,7 @@ class TopicProvisionerTest {
 
     @Nested
     class WhenCreateTopicsFails {
+
         @Test
         void givenExecutionExceptionWithTopicExistsCause_thenLogsInfoAndDoesNotThrow() throws Exception {
             ExecutionException ex = new ExecutionException(new TopicExistsException("topic already exists"));

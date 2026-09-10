@@ -9,7 +9,7 @@ import zen.labs.inventory.domain.InventoryReservation;
 public interface InventoryReservationDataStore {
     InventoryReservation save(InventoryReservation reservation);
 
-    Optional<InventoryReservation> findBySagaId(String sagaId);
+    Optional<InventoryReservation> findByOrderId(String orderId);
 
     Optional<InventoryReservation> update(InventoryReservation reservation);
 }

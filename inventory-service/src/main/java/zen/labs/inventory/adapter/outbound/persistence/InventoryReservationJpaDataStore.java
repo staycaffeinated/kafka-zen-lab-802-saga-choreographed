@@ -23,14 +23,14 @@ public class InventoryReservationJpaDataStore implements InventoryReservationDat
     }
 
     @Override
-    public Optional<InventoryReservation> findBySagaId(String sagaId) {
-        return repository.findBySagaId(sagaId).map(this::toDomain);
+    public Optional<InventoryReservation> findByOrderId(String orderId) {
+        return repository.findByOrderId(orderId).map(this::toDomain);
     }
 
     @Override
     public Optional<InventoryReservation> update(InventoryReservation domain) {
         return repository
-                .findBySagaId(domain.getSagaId())
+                .findByOrderId(domain.getOrderId())
                 .map(entity -> {
                     entity.setStatus(domain.getStatus());
                     return repository.save(entity);
@@ -40,7 +40,6 @@ public class InventoryReservationJpaDataStore implements InventoryReservationDat
 
     private InventoryReservation toDomain(InventoryReservationJpaEntity e) {
         return InventoryReservation.builder()
-                .sagaId(e.getSagaId())
                 .orderId(e.getOrderId())
                 .status(e.getStatus())
                 .reservedAt(e.getReservedAt())
@@ -49,7 +48,6 @@ public class InventoryReservationJpaDataStore implements InventoryReservationDat
 
     private InventoryReservationJpaEntity toEntity(InventoryReservation d) {
         var e = new InventoryReservationJpaEntity();
-        e.setSagaId(d.getSagaId());
         e.setOrderId(d.getOrderId());
         e.setStatus(d.getStatus());
         e.setReservedAt(d.getReservedAt());

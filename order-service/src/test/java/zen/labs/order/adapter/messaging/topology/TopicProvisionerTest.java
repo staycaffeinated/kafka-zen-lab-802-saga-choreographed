@@ -46,11 +46,10 @@ class TopicProvisionerTest {
 
         topicProvisioner = new TopicProvisioner(
                 kafkaAdmin,
-                "saga.order.commands",
-                "saga.payment.commands",
-                "saga.inventory.commands",
-                "saga.shipping.commands",
-                "saga.orchestrator.replies");
+                "saga.order.events",
+                "saga.inventory.events",
+                "saga.payment.events",
+                "saga.shipping.events");
     }
 
     @AfterEach

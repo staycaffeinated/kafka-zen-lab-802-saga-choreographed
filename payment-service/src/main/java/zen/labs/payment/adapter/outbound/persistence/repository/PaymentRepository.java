@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import zen.labs.payment.adapter.outbound.persistence.entity.PaymentJpaEntity;
 
 public interface PaymentRepository extends JpaRepository<PaymentJpaEntity, Long> {
-    Optional<PaymentJpaEntity> findBySagaId(String sagaId);
+    Optional<PaymentJpaEntity> findByOrderId(String orderId);
 }

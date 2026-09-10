@@ -27,16 +27,19 @@ import org.springframework.stereotype.Component;
 public class TopicProvisioner {
 
     private final KafkaAdmin kafkaAdmin;
-    private final String commands;
-    private final String orchestratorReplies;
+    private final String shippingEvents;
+    private final String paymentEvents;
+    private final String orderEvents;
 
     public TopicProvisioner(
             KafkaAdmin kafkaAdmin,
-            @Value("${application.saga.topics.commands}") String commands,
-            @Value("${application.saga.topics.orchestrator-replies}") String orchestratorReplies) {
+            @Value("${application.saga.topics.shipping-events}") String shippingEvents,
+            @Value("${application.saga.topics.payment-events}") String paymentEvents,
+            @Value("${application.saga.topics.order-events}") String orderEvents) {
         this.kafkaAdmin = kafkaAdmin;
-        this.commands = commands;
-        this.orchestratorReplies = orchestratorReplies;
+        this.shippingEvents = shippingEvents;
+        this.paymentEvents = paymentEvents;
+        this.orderEvents = orderEvents;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -59,15 +62,12 @@ public class TopicProvisioner {
     }
 
     private List<String> topicNames() {
-        return List.of(commands, orchestratorReplies);
+        return List.of(shippingEvents, paymentEvents, orderEvents);
     }
 
     /*
      * The brokers' default number of partitions and replicas will be used
      * if those values are not explicitly set here.
-     * For guidance on choosing the number of partitions, see:
-     * https://www.confluent.io/blog/how-choose-number-topics-partitions-kafka-cluster/
-     * https://www.confluent.io/blog/kafka-streams-tables-part-2-topics-partitions-and-storage-fundamentals/
      */
     private NewTopic createTopic(String topicName) {
         return TopicBuilder.name(topicName).build();

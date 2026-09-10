@@ -23,14 +23,14 @@ public class ShipmentJpaDataStore implements ShipmentDataStore {
     }
 
     @Override
-    public Optional<Shipment> findBySagaId(String sagaId) {
-        return repository.findBySagaId(sagaId).map(this::toDomain);
+    public Optional<Shipment> findByOrderId(String orderId) {
+        return repository.findByOrderId(orderId).map(this::toDomain);
     }
 
     @Override
     public Optional<Shipment> update(Shipment domain) {
         return repository
-                .findBySagaId(domain.getSagaId())
+                .findByOrderId(domain.getOrderId())
                 .map(entity -> {
                     entity.setStatus(domain.getStatus());
                     return repository.save(entity);
@@ -40,7 +40,6 @@ public class ShipmentJpaDataStore implements ShipmentDataStore {
 
     private Shipment toDomain(ShipmentJpaEntity e) {
         return Shipment.builder()
-                .sagaId(e.getSagaId())
                 .orderId(e.getOrderId())
                 .shippingAddress(e.getShippingAddress())
                 .status(e.getStatus())
@@ -50,7 +49,6 @@ public class ShipmentJpaDataStore implements ShipmentDataStore {
 
     private ShipmentJpaEntity toEntity(Shipment d) {
         var e = new ShipmentJpaEntity();
-        e.setSagaId(d.getSagaId());
         e.setOrderId(d.getOrderId());
         e.setShippingAddress(d.getShippingAddress());
         e.setStatus(d.getStatus());

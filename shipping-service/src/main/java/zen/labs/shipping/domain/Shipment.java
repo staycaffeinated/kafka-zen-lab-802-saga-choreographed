@@ -11,7 +11,6 @@ import lombok.With;
 @Getter
 @Builder
 public class Shipment {
-    private final String sagaId;
     private final String orderId;
     private final String shippingAddress;
 

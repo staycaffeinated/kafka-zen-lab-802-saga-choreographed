@@ -27,16 +27,19 @@ import org.springframework.stereotype.Component;
 public class TopicProvisioner {
 
     private final KafkaAdmin kafkaAdmin;
-    private final String commands;
-    private final String orchestratorReplies;
+    private final String inventoryEvents;
+    private final String orderEvents;
+    private final String paymentEvents;
 
     public TopicProvisioner(
             KafkaAdmin kafkaAdmin,
-            @Value("${application.saga.topics.commands}") String commands,
-            @Value("${application.saga.topics.orchestrator-replies}") String orchestratorReplies) {
+            @Value("${application.saga.topics.inventory-events}") String inventoryEvents,
+            @Value("${application.saga.topics.order-events}") String orderEvents,
+            @Value("${application.saga.topics.payment-events}") String paymentEvents) {
         this.kafkaAdmin = kafkaAdmin;
-        this.commands = commands;
-        this.orchestratorReplies = orchestratorReplies;
+        this.inventoryEvents = inventoryEvents;
+        this.orderEvents = orderEvents;
+        this.paymentEvents = paymentEvents;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -59,7 +62,7 @@ public class TopicProvisioner {
     }
 
     private List<String> topicNames() {
-        return List.of(commands, orchestratorReplies);
+        return List.of(inventoryEvents, orderEvents, paymentEvents);
     }
 
     /*

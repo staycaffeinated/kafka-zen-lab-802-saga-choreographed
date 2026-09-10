@@ -27,25 +27,22 @@ import org.springframework.stereotype.Component;
 public class TopicProvisioner {
 
     private final KafkaAdmin kafkaAdmin;
-    private final String orderCommands;
-    private final String paymentCommands;
-    private final String inventoryCommands;
-    private final String shippingCommands;
-    private final String orchestratorReplies;
+    private final String orderEvents;
+    private final String inventoryEvents;
+    private final String paymentEvents;
+    private final String shippingEvents;
 
     public TopicProvisioner(
             KafkaAdmin kafkaAdmin,
-            @Value("${application.saga.topics.order-commands}") String orderCommands,
-            @Value("${application.saga.topics.payment-commands}") String paymentCommands,
-            @Value("${application.saga.topics.inventory-commands}") String inventoryCommands,
-            @Value("${application.saga.topics.shipping-commands}") String shippingCommands,
-            @Value("${application.saga.topics.orchestrator-replies}") String orchestratorReplies) {
+            @Value("${application.saga.topics.order-events}") String orderEvents,
+            @Value("${application.saga.topics.inventory-events}") String inventoryEvents,
+            @Value("${application.saga.topics.payment-events}") String paymentEvents,
+            @Value("${application.saga.topics.shipping-events}") String shippingEvents) {
         this.kafkaAdmin = kafkaAdmin;
-        this.orderCommands = orderCommands;
-        this.paymentCommands = paymentCommands;
-        this.inventoryCommands = inventoryCommands;
-        this.shippingCommands = shippingCommands;
-        this.orchestratorReplies = orchestratorReplies;
+        this.orderEvents = orderEvents;
+        this.inventoryEvents = inventoryEvents;
+        this.paymentEvents = paymentEvents;
+        this.shippingEvents = shippingEvents;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -68,7 +65,7 @@ public class TopicProvisioner {
     }
 
     private List<String> topicNames() {
-        return List.of(orderCommands, paymentCommands, inventoryCommands, shippingCommands, orchestratorReplies);
+        return List.of(orderEvents, inventoryEvents, paymentEvents, shippingEvents);
     }
 
     /*

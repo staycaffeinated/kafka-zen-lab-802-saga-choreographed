@@ -43,14 +43,12 @@ class InventoryReservationJpaDataStoreTest {
             // Given
             Instant reservedAt = Instant.parse("2026-01-01T10:00:00Z");
             InventoryReservation domain = InventoryReservation.builder()
-                    .sagaId("saga-001")
                     .orderId("order-001")
                     .status(ReservationStatus.RESERVED)
                     .reservedAt(reservedAt)
                     .build();
 
             InventoryReservationJpaEntity savedEntity = new InventoryReservationJpaEntity();
-            savedEntity.setSagaId("saga-001");
             savedEntity.setOrderId("order-001");
             savedEntity.setStatus(ReservationStatus.RESERVED);
             savedEntity.setReservedAt(reservedAt);
@@ -66,12 +64,10 @@ class InventoryReservationJpaDataStoreTest {
             verify(repository).save(entityCaptor.capture());
 
             InventoryReservationJpaEntity captured = entityCaptor.getValue();
-            assertThat(captured.getSagaId()).isEqualTo("saga-001");
             assertThat(captured.getOrderId()).isEqualTo("order-001");
             assertThat(captured.getStatus()).isEqualTo(ReservationStatus.RESERVED);
             assertThat(captured.getReservedAt()).isEqualTo(reservedAt);
 
-            assertThat(result.getSagaId()).isEqualTo("saga-001");
             assertThat(result.getOrderId()).isEqualTo("order-001");
             assertThat(result.getStatus()).isEqualTo(ReservationStatus.RESERVED);
             assertThat(result.getReservedAt()).isEqualTo(reservedAt);
@@ -79,8 +75,8 @@ class InventoryReservationJpaDataStoreTest {
     }
 
     @Nested
-    @DisplayName("findBySagaId")
-    class FindBySagaId {
+    @DisplayName("findByOrderId")
+    class FindByOrderId {
 
         @Test
         @DisplayName("should return Optional with correct domain fields when entity found")
@@ -88,20 +84,18 @@ class InventoryReservationJpaDataStoreTest {
             // Given
             Instant reservedAt = Instant.parse("2026-01-02T08:30:00Z");
             InventoryReservationJpaEntity entity = new InventoryReservationJpaEntity();
-            entity.setSagaId("saga-002");
             entity.setOrderId("order-002");
             entity.setStatus(ReservationStatus.RESERVED);
             entity.setReservedAt(reservedAt);
 
-            when(repository.findBySagaId("saga-002")).thenReturn(Optional.of(entity));
+            when(repository.findByOrderId("order-002")).thenReturn(Optional.of(entity));
 
             // When
-            Optional<InventoryReservation> result = dataStore.findBySagaId("saga-002");
+            Optional<InventoryReservation> result = dataStore.findByOrderId("order-002");
 
             // Then
             assertThat(result).isPresent();
             InventoryReservation domain = result.get();
-            assertThat(domain.getSagaId()).isEqualTo("saga-002");
             assertThat(domain.getOrderId()).isEqualTo("order-002");
             assertThat(domain.getStatus()).isEqualTo(ReservationStatus.RESERVED);
             assertThat(domain.getReservedAt()).isEqualTo(reservedAt);
@@ -111,10 +105,10 @@ class InventoryReservationJpaDataStoreTest {
         @DisplayName("should return Optional.empty() when entity not found")
         void shouldReturnEmpty_whenEntityNotFound() {
             // Given
-            when(repository.findBySagaId("saga-999")).thenReturn(Optional.empty());
+            when(repository.findByOrderId("order-999")).thenReturn(Optional.empty());
 
             // When
-            Optional<InventoryReservation> result = dataStore.findBySagaId("saga-999");
+            Optional<InventoryReservation> result = dataStore.findByOrderId("order-999");
 
             // Then
             assertThat(result).isEmpty();
@@ -131,19 +125,17 @@ class InventoryReservationJpaDataStoreTest {
             // Given
             Instant reservedAt = Instant.parse("2026-01-03T12:00:00Z");
             InventoryReservationJpaEntity existingEntity = new InventoryReservationJpaEntity();
-            existingEntity.setSagaId("saga-003");
             existingEntity.setOrderId("order-003");
             existingEntity.setStatus(ReservationStatus.RESERVED);
             existingEntity.setReservedAt(reservedAt);
 
             InventoryReservation domainWithNewStatus = InventoryReservation.builder()
-                    .sagaId("saga-003")
                     .orderId("order-003")
                     .status(ReservationStatus.RELEASED)
                     .reservedAt(reservedAt)
                     .build();
 
-            when(repository.findBySagaId("saga-003")).thenReturn(Optional.of(existingEntity));
+            when(repository.findByOrderId("order-003")).thenReturn(Optional.of(existingEntity));
             when(repository.save(existingEntity)).thenAnswer(inv -> inv.getArgument(0));
 
             // When
@@ -155,7 +147,7 @@ class InventoryReservationJpaDataStoreTest {
 
             assertThat(result).isPresent();
             assertThat(result.get().getStatus()).isEqualTo(ReservationStatus.RELEASED);
-            assertThat(result.get().getSagaId()).isEqualTo("saga-003");
+            assertThat(result.get().getOrderId()).isEqualTo("order-003");
         }
 
         @Test
@@ -163,13 +155,12 @@ class InventoryReservationJpaDataStoreTest {
         void shouldNeverSaveAndReturnEmpty_whenEntityNotFound() {
             // Given
             InventoryReservation domainWithNewStatus = InventoryReservation.builder()
-                    .sagaId("saga-404")
                     .orderId("order-404")
                     .status(ReservationStatus.RELEASED)
                     .reservedAt(Instant.parse("2026-01-04T00:00:00Z"))
                     .build();
 
-            when(repository.findBySagaId("saga-404")).thenReturn(Optional.empty());
+            when(repository.findByOrderId("order-404")).thenReturn(Optional.empty());
 
             // When
             Optional<InventoryReservation> result = dataStore.update(domainWithNewStatus);

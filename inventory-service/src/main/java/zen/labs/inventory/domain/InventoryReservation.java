@@ -11,7 +11,6 @@ import lombok.With;
 @Getter
 @Builder
 public class InventoryReservation {
-    private final String sagaId;
     private final String orderId;
 
     @With

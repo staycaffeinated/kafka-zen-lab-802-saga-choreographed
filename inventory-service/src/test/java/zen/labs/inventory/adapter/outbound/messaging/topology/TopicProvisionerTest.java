@@ -43,7 +43,11 @@ class TopicProvisionerTest {
         mockedAdminClient = mockStatic(AdminClient.class);
         mockedAdminClient.when(() -> AdminClient.create(any(Map.class))).thenReturn(adminClient);
 
-        topicProvisioner = new TopicProvisioner(kafkaAdmin, "saga.inventory.commands", "saga.orchestrator.replies");
+        topicProvisioner = new TopicProvisioner(
+                kafkaAdmin,
+                "kafka-zen.lab-802.saga.inventory.events",
+                "kafka-zen.lab-802.saga.order.events",
+                "kafka-zen.lab-802.saga.payment.events");
     }
 
     @AfterEach

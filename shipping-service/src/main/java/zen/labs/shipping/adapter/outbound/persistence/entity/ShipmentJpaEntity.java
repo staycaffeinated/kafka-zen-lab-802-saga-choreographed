@@ -29,9 +29,6 @@ public class ShipmentJpaEntity {
     private Long id;
 
     @Column(unique = true, nullable = false, length = 64)
-    private String sagaId;
-
-    @Column(nullable = false, length = 64)
     private String orderId;
 
     @Column(nullable = false)
