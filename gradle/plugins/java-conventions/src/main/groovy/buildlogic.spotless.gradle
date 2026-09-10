@@ -10,7 +10,7 @@ subprojects {
 
 spotless {
     java {
-        palantirJavaFormat()
+        palantirJavaFormat('2.71.0')
         removeUnusedImports()
         importOrder()           // imports are ordered
         leadingTabsToSpaces(4)
