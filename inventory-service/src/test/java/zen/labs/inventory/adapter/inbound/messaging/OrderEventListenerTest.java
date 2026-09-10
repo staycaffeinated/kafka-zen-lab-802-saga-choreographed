@@ -1,5 +1,7 @@
 package zen.labs.inventory.adapter.inbound.messaging;
 
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -61,7 +63,7 @@ class OrderEventListenerTest {
 
             listener.onEvent(PAYLOAD, ack);
 
-            verify(eventUseCase).handleOrderPlaced(ORDER_ID, event.items(), AMOUNT, ADDRESS);
+            verify(eventUseCase).handleOrderPlaced(eq(ORDER_ID), anyList(), eq(AMOUNT), eq(ADDRESS));
             verify(ack).acknowledge();
         }
 

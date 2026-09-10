@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
 import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
+import zen.labs.inventory.application.port.inbound.OrderedItem;
 
 @Component
 @Slf4j
@@ -30,9 +31,13 @@ public class OrderEventListener {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
             switch (event.type()) {
-                case ORDER_PLACED ->
+                case ORDER_PLACED -> {
+                    var items = event.items().stream()
+                            .map(i -> new OrderedItem(i.productId(), i.quantity()))
+                            .toList();
                     eventUseCase.handleOrderPlaced(
-                            event.orderId(), event.items(), event.amount(), event.shippingAddress());
+                            event.orderId(), items, event.amount(), event.shippingAddress());
+                }
                 case ORDER_CANCELLATION_REQUESTED -> eventUseCase.handleRelease(event.orderId());
                 default -> log.debug("Ignoring order event: {}", event.type());
             }

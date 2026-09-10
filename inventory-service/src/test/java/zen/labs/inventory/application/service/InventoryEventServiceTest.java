@@ -19,7 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import zen.labs.adapters.common.kafka.SagaEventItem;
+import zen.labs.inventory.application.port.inbound.OrderedItem;
 import zen.labs.inventory.application.port.outbound.InventoryEventPublisher;
 import zen.labs.inventory.application.port.outbound.InventoryReservationDataStore;
 import zen.labs.inventory.domain.InventoryReservation;
@@ -49,7 +49,7 @@ class InventoryEventServiceTest {
         @Test
         @DisplayName("should save reservation and publish INVENTORY_RESERVED when all items within limit")
         void shouldReserveAndPublish_whenWithinLimit() {
-            var items = List.of(new SagaEventItem("prod-A", 10), new SagaEventItem("prod-B", 100));
+            var items = List.of(new OrderedItem("prod-A", 10), new OrderedItem("prod-B", 100));
             when(reservationDataStore.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             service.handleOrderPlaced(ORDER_ID, items, AMOUNT, SHIPPING_ADDRESS);
@@ -64,7 +64,7 @@ class InventoryEventServiceTest {
         @Test
         @DisplayName("should NOT save and publish INVENTORY_RESERVATION_FAILED when any item exceeds 100")
         void shouldFailAndPublish_whenItemExceedsLimit() {
-            var items = List.of(new SagaEventItem("prod-X", 101));
+            var items = List.of(new OrderedItem("prod-X", 101));
 
             service.handleOrderPlaced(ORDER_ID, items, AMOUNT, SHIPPING_ADDRESS);
 

@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import zen.labs.adapters.common.kafka.SagaEventItem;
 import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
+import zen.labs.inventory.application.port.inbound.OrderedItem;
 import zen.labs.inventory.application.port.outbound.InventoryEventPublisher;
 import zen.labs.inventory.application.port.outbound.InventoryReservationDataStore;
 import zen.labs.inventory.domain.InventoryReservation;
@@ -23,7 +23,7 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
     @Override
     @Transactional
     public void handleOrderPlaced(
-            String orderId, List<SagaEventItem> items, BigDecimal amount, String shippingAddress) {
+            String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
         var exceeded = items.stream().filter(i -> i.quantity() > 100).findFirst();
         if (exceeded.isPresent()) {
             log.warn(
