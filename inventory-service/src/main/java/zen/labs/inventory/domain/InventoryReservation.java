@@ -17,4 +17,19 @@ public class InventoryReservation {
     private final ReservationStatus status;
 
     private final Instant reservedAt;
+
+    public static InventoryReservation forOrder(String orderId) {
+        return InventoryReservation.builder()
+                .orderId(orderId)
+                .status(ReservationStatus.RESERVED)
+                .reservedAt(Instant.now())
+                .build();
+    }
+
+    public InventoryReservation release() {
+        if (status != ReservationStatus.RESERVED) {
+            throw new IllegalStateException("Cannot release reservation in status: " + status);
+        }
+        return withStatus(ReservationStatus.RELEASED);
+    }
 }

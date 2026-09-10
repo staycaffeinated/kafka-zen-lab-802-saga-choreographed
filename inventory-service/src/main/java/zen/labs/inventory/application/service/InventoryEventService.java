@@ -1,7 +1,6 @@
 package zen.labs.inventory.application.service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,6 @@ import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
 import zen.labs.inventory.application.port.outbound.InventoryEventPublisher;
 import zen.labs.inventory.application.port.outbound.InventoryReservationDataStore;
 import zen.labs.inventory.domain.InventoryReservation;
-import zen.labs.inventory.domain.ReservationStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -36,11 +34,7 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
                     orderId, "Insufficient stock for product: " + exceeded.get().productId());
             return;
         }
-        var reservation = InventoryReservation.builder()
-                .orderId(orderId)
-                .status(ReservationStatus.RESERVED)
-                .reservedAt(Instant.now())
-                .build();
+        var reservation = InventoryReservation.forOrder(orderId);
         reservationDataStore.save(reservation);
         log.info("Inventory reserved: orderId={}", orderId);
         eventPublisher.publishInventoryReserved(orderId, amount, shippingAddress);
@@ -53,7 +47,7 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
                 .findByOrderId(orderId)
                 .ifPresentOrElse(
                         r -> {
-                            reservationDataStore.update(r.withStatus(ReservationStatus.RELEASED));
+                            reservationDataStore.update(r.release());
                             log.info("Inventory released: orderId={}", orderId);
                         },
                         () -> log.warn("No reservation to release: orderId={}", orderId));
