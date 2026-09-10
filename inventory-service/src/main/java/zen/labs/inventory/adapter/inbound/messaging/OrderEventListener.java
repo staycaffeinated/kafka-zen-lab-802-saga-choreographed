@@ -35,8 +35,7 @@ public class OrderEventListener {
                     var items = event.items().stream()
                             .map(i -> new OrderedItem(i.productId(), i.quantity()))
                             .toList();
-                    eventUseCase.handleOrderPlaced(
-                            event.orderId(), items, event.amount(), event.shippingAddress());
+                    eventUseCase.handleOrderPlaced(event.orderId(), items, event.amount(), event.shippingAddress());
                 }
                 case ORDER_CANCELLATION_REQUESTED -> eventUseCase.handleRelease(event.orderId());
                 default -> log.debug("Ignoring order event: {}", event.type());

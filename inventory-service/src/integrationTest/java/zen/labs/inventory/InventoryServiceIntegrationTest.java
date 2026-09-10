@@ -19,9 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import zen.labs.adapters.common.kafka.SagaEventItem;
 import zen.labs.inventory.adapter.outbound.persistence.repository.OutboxRepository;
 import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
+import zen.labs.inventory.application.port.inbound.OrderedItem;
 import zen.labs.inventory.common.persistence.AbstractPostgresIntegrationTest;
 
 @ActiveProfiles({TEST, INTEGRATION_TEST})
@@ -56,7 +56,7 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
 
         eventUseCase.handleOrderPlaced(
                 orderId,
-                List.of(new SagaEventItem("product-1", 5)),
+                List.of(new OrderedItem("product-1", 5)),
                 BigDecimal.valueOf(500),
                 "123 Main St, Springfield, IL 62701");
 
@@ -76,7 +76,7 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
         var orderId = "order-" + UUID.randomUUID();
 
         eventUseCase.handleOrderPlaced(
-                orderId, List.of(new SagaEventItem("product-1", 101)), BigDecimal.valueOf(500), "123 Main St");
+                orderId, List.of(new OrderedItem("product-1", 101)), BigDecimal.valueOf(500), "123 Main St");
 
         var rows = outboxRepository.findAll().stream()
                 .filter(r -> r.getAggregateId().equals(orderId))

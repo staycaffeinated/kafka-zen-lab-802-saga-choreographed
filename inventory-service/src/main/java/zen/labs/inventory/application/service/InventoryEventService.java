@@ -22,8 +22,7 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
 
     @Override
     @Transactional
-    public void handleOrderPlaced(
-            String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
+    public void handleOrderPlaced(String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
         var exceeded = items.stream().filter(i -> i.quantity() > 100).findFirst();
         if (exceeded.isPresent()) {
             log.warn(
