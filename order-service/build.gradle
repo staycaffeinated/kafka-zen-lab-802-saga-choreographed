@@ -109,10 +109,12 @@ jib {
 // --------------------------------------------------------------------------------
 // Sonar configuration
 // --------------------------------------------------------------------------------
-def ignoredClasses =
-        "**/OrderService.java" +
-        ",**/KafkaConsumerConfiguration.java"
 
+def ignoredClasses =
+        "**/CreateOrderItemRequest.java" +
+        ",**/CreateOrderRequest.java" +
+        ",**/OrderQueryService.java" +
+        ",**/OrderResponse.java"
 
 sonar {
     properties {

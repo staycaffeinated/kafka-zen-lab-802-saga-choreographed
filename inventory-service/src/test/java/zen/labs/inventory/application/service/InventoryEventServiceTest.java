@@ -83,7 +83,7 @@ class InventoryEventServiceTest {
             var existing = InventoryReservation.builder()
                     .orderId(ORDER_ID)
                     .status(ReservationStatus.RESERVED)
-                    .reservedAt(Instant.now())
+                    .reservedAt(Instant.parse("2020-01-01T00:00:00.00Z"))
                     .build();
             when(reservationDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
 

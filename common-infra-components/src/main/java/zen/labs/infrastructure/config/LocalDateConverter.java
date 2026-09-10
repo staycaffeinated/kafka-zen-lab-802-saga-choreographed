@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * When support for LocalDate in request parameters is needed
  */
 @Component
-@SuppressWarnings({"java:S7467 " // sonar-lint issue with Java 25 prevents using this style
+@SuppressWarnings({"java:S7467" // sonar-lint issue with Java 25 prevents using this style
 })
 public class LocalDateConverter implements Converter<String, LocalDate> {
 

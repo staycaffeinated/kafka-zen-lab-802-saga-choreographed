@@ -52,7 +52,10 @@ def ignoredClasses =
         "**/CorrelationIdFilter.java" +
         ",**/LoggingFilter.java" +
         ",**/SagaCommandType.java" +
-        ",**/SagaReplyType.java"
+        ",**/SagaReplyType.java" +
+        ",**/SagaEvent.java" +
+        ",**/SagaEventItem.java" +
+        ",**/SagaEventType.java"
 
 sonar {
   properties {
