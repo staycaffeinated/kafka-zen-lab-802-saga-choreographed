@@ -1,33 +1,35 @@
-package zen.labs.order.adapter.outbound.messaging;
+package zen.labs.order.adapter.outbound.persistence;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
 import zen.labs.adapters.common.kafka.SagaEventItem;
 import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.application.common.exceptions.ApplicationException;
+import zen.labs.order.adapter.outbound.persistence.entity.OutboxJpaEntity;
+import zen.labs.order.adapter.outbound.persistence.repository.OutboxRepository;
 import zen.labs.order.application.port.outbound.OrderEventPublisher;
 import zen.labs.order.domain.OrderItem;
 
 @Component
 @Slf4j
-public class KafkaOrderEventPublisher implements OrderEventPublisher {
+public class OutboxOrderEventPublisher implements OrderEventPublisher {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutboxRepository outboxRepository;
     private final JsonMapper jsonMapper;
     private final String orderEventsTopic;
 
-    public KafkaOrderEventPublisher(
-            KafkaTemplate<String, String> kafkaTemplate,
+    public OutboxOrderEventPublisher(
+            OutboxRepository outboxRepository,
             JsonMapper jsonMapper,
             @Value("${application.saga.topics.order-events}") String orderEventsTopic) {
-        this.kafkaTemplate = kafkaTemplate;
+        this.outboxRepository = outboxRepository;
         this.jsonMapper = jsonMapper;
         this.orderEventsTopic = orderEventsTopic;
     }
@@ -44,7 +46,7 @@ public class KafkaOrderEventPublisher implements OrderEventPublisher {
                         .toList(),
                 amount,
                 shippingAddress);
-        publish(orderId, event);
+        persist(orderId, SagaEventType.ORDER_PLACED, event);
     }
 
     @Override
@@ -57,17 +59,21 @@ public class KafkaOrderEventPublisher implements OrderEventPublisher {
                 null,
                 null,
                 null);
-        publish(orderId, event);
+        persist(orderId, SagaEventType.ORDER_CANCELLATION_REQUESTED, event);
     }
 
-    private void publish(String key, SagaEvent event) {
+    private void persist(String orderId, SagaEventType type, SagaEvent event) {
         try {
-            kafkaTemplate
-                    .send(orderEventsTopic, key, jsonMapper.writeValueAsString(event))
-                    .get();
-            log.debug("Published {}: orderId={}", event.type(), event.orderId());
+            outboxRepository.save(OutboxJpaEntity.builder()
+                    .aggregateType(orderEventsTopic)
+                    .aggregateId(orderId)
+                    .type(type.name())
+                    .payload(jsonMapper.writeValueAsString(event))
+                    .createdAt(Instant.now())
+                    .build());
+            log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {
-            throw new ApplicationException("Failed to publish event: " + event.type(), e);
+            throw new ApplicationException("Failed to persist outbox event: " + type, e);
         }
     }
 }
