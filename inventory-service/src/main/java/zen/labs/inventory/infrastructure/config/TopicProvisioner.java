@@ -1,4 +1,4 @@
-package zen.labs.inventory.adapter.outbound.messaging.topology;
+package zen.labs.inventory.infrastructure.config;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

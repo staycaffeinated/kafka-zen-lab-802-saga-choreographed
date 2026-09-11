@@ -1,4 +1,4 @@
-package zen.labs.payment.adapter.outbound.messaging.topology;
+package zen.labs.inventory.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,10 +45,9 @@ class TopicProvisionerTest {
 
         topicProvisioner = new TopicProvisioner(
                 kafkaAdmin,
-                "saga.payment.events",
-                "saga.inventory.events",
-                "saga.shipping.events",
-                "saga.order.events");
+                "kafka-zen.lab-802.saga.inventory.events",
+                "kafka-zen.lab-802.saga.order.events",
+                "kafka-zen.lab-802.saga.payment.events");
     }
 
     @AfterEach

@@ -1,4 +1,4 @@
-package zen.labs.payment.adapter.outbound.messaging.topology;
+package zen.labs.payment.infrastructure.config;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

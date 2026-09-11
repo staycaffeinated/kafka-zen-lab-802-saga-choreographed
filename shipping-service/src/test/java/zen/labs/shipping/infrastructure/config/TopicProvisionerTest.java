@@ -1,4 +1,4 @@
-package zen.labs.inventory.adapter.outbound.messaging.topology;
+package zen.labs.shipping.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,9 +45,9 @@ class TopicProvisionerTest {
 
         topicProvisioner = new TopicProvisioner(
                 kafkaAdmin,
-                "kafka-zen.lab-802.saga.inventory.events",
-                "kafka-zen.lab-802.saga.order.events",
-                "kafka-zen.lab-802.saga.payment.events");
+                "kafka-zen.lab-802.saga.shipping.events",
+                "kafka-zen.lab-802.saga.payment.events",
+                "kafka-zen.lab-802.saga.order.events");
     }
 
     @AfterEach
@@ -71,6 +71,7 @@ class TopicProvisionerTest {
 
     @Nested
     class WhenCreateTopicsFails {
+
         @Test
         void givenExecutionExceptionWithTopicExistsCause_thenLogsInfoAndDoesNotThrow() throws Exception {
             ExecutionException ex = new ExecutionException(new TopicExistsException("topic already exists"));

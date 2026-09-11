@@ -1,4 +1,4 @@
-package zen.labs.order.adapter.messaging.topology;
+package zen.labs.payment.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.kafka.core.KafkaAdmin;
-import zen.labs.order.adapter.outbound.messaging.topology.TopicProvisioner;
 
 class TopicProvisionerTest {
 
@@ -46,10 +45,10 @@ class TopicProvisionerTest {
 
         topicProvisioner = new TopicProvisioner(
                 kafkaAdmin,
-                "saga.order.events",
-                "saga.inventory.events",
                 "saga.payment.events",
-                "saga.shipping.events");
+                "saga.inventory.events",
+                "saga.shipping.events",
+                "saga.order.events");
     }
 
     @AfterEach

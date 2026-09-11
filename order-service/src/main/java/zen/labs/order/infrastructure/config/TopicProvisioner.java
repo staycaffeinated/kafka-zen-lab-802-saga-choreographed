@@ -1,4 +1,4 @@
-package zen.labs.shipping.adapter.outbound.messaging.topology;
+package zen.labs.order.infrastructure.config;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -27,19 +27,22 @@ import org.springframework.stereotype.Component;
 public class TopicProvisioner {
 
     private final KafkaAdmin kafkaAdmin;
-    private final String shippingEvents;
-    private final String paymentEvents;
     private final String orderEvents;
+    private final String inventoryEvents;
+    private final String paymentEvents;
+    private final String shippingEvents;
 
     public TopicProvisioner(
             KafkaAdmin kafkaAdmin,
-            @Value("${application.saga.topics.shipping-events}") String shippingEvents,
+            @Value("${application.saga.topics.order-events}") String orderEvents,
+            @Value("${application.saga.topics.inventory-events}") String inventoryEvents,
             @Value("${application.saga.topics.payment-events}") String paymentEvents,
-            @Value("${application.saga.topics.order-events}") String orderEvents) {
+            @Value("${application.saga.topics.shipping-events}") String shippingEvents) {
         this.kafkaAdmin = kafkaAdmin;
-        this.shippingEvents = shippingEvents;
-        this.paymentEvents = paymentEvents;
         this.orderEvents = orderEvents;
+        this.inventoryEvents = inventoryEvents;
+        this.paymentEvents = paymentEvents;
+        this.shippingEvents = shippingEvents;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -62,12 +65,15 @@ public class TopicProvisioner {
     }
 
     private List<String> topicNames() {
-        return List.of(shippingEvents, paymentEvents, orderEvents);
+        return List.of(orderEvents, inventoryEvents, paymentEvents, shippingEvents);
     }
 
     /*
      * The brokers' default number of partitions and replicas will be used
      * if those values are not explicitly set here.
+     * For guidance on choosing the number of partitions, see:
+     * https://www.confluent.io/blog/how-choose-number-topics-partitions-kafka-cluster/
+     * https://www.confluent.io/blog/kafka-streams-tables-part-2-topics-partitions-and-storage-fundamentals/
      */
     private NewTopic createTopic(String topicName) {
         return TopicBuilder.name(topicName).build();
