@@ -20,4 +20,5 @@ include "common-adapter-components"
 include "common-application-components"
 include "common-domain-components"
 include "common-infra-components"
+include "e2e-tests"
 

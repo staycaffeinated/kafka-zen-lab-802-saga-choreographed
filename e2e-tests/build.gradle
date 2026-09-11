@@ -1,0 +1,19 @@
+plugins {
+    id 'buildlogic.java-conventions'
+}
+
+dependencies {
+    testImplementation(platform(libs.junit.bom))
+    testImplementation libs.junit.jupiter
+    testImplementation libs.junit.platform.launcher
+    testImplementation libs.assertJ
+    testImplementation libs.awaitility
+    testImplementation libs.rest.assured
+}
+
+// E2E tests require a running Docker stack — excluded from ./gradlew build by default.
+// Run with: ./gradlew :e2e-tests:test -PrunE2eTests
+test {
+    enabled = project.hasProperty('runE2eTests')
+    systemProperty 'order.service.url', project.findProperty('orderServiceUrl') ?: 'http://localhost:8085'
+}
