@@ -124,10 +124,7 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     void handleRelease_withExistingReservation_releasesAndWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();
         eventUseCase.handleOrderPlaced(
-                orderId,
-                List.of(new OrderedItem("product-1", 5)),
-                BigDecimal.valueOf(500),
-                "123 Main St");
+                orderId, List.of(new OrderedItem("product-1", 5)), BigDecimal.valueOf(500), "123 Main St");
         outboxRepository.deleteAll();
 
         eventUseCase.handleRelease(orderId);

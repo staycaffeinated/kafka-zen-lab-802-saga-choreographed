@@ -30,13 +30,15 @@ public class InventoryEventListener {
             topics = "${application.saga.topics.inventory-events}",
             groupId = "${spring.kafka.consumer.group-id}-inventory")
     public void onEvent(@Payload String payload, Acknowledgment ack) {
+        log.info("===> Inventory event received...");
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
             if (event.type() == SagaEventType.INVENTORY_RESERVED) {
+                log.info("===> Inventory reservation event received; orderId={}", event.orderId());
                 eventUseCase.handleInventoryReserved(event.orderId(), event.amount(), event.shippingAddress());
             } else {
-                log.debug("Ignoring inventory event: {}", event.type());
+                log.info("===> Ignoring inventory event: {}", event.type());
             }
             ack.acknowledge();
         } finally {

@@ -80,13 +80,10 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
                     .satisfies(r -> assertThat(r.status()).isEqualTo("CONFIRMING"))
                     .satisfies(r -> assertThat(r.items()).hasSize(1));
 
-            assertThat(outboxRepository.findAll())
-                    .hasSize(1)
-                    .first()
-                    .satisfies(row -> {
-                        assertThat(row.getType()).isEqualTo("ORDER_PLACED");
-                        assertThat(row.getCreatedAt()).isNotNull();
-                    });
+            assertThat(outboxRepository.findAll()).hasSize(1).first().satisfies(row -> {
+                assertThat(row.getType()).isEqualTo("ORDER_PLACED");
+                assertThat(row.getCreatedAt()).isNotNull();
+            });
         }
 
         @Test
@@ -106,7 +103,8 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
         @Test
         @DisplayName("returns 400 when customerId is blank")
         void returns400_whenCustomerIdBlank() {
-            postOrder("""
+            postOrder(
+                            """
                     {"customerId":"","items":[{"productId":"p-1","quantity":1,"unitPrice":10.00}],"shippingAddress":"42 Elm Street"}
                     """)
                     .assertThat()
@@ -116,7 +114,8 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
         @Test
         @DisplayName("returns 400 when items list is empty")
         void returns400_whenItemsEmpty() {
-            postOrder("""
+            postOrder(
+                            """
                     {"customerId":"customer-001","items":[],"shippingAddress":"42 Elm Street"}
                     """)
                     .assertThat()
@@ -126,7 +125,8 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
         @Test
         @DisplayName("returns 400 when shippingAddress is blank")
         void returns400_whenShippingAddressBlank() {
-            postOrder("""
+            postOrder(
+                            """
                     {"customerId":"customer-001","items":[{"productId":"p-1","quantity":1,"unitPrice":10.00}],"shippingAddress":""}
                     """)
                     .assertThat()

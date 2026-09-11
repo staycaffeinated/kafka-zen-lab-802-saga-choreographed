@@ -30,10 +30,12 @@ public class ShippingEventListener {
             topics = "${application.saga.topics.shipping-events}",
             groupId = "${spring.kafka.consumer.group-id}-shipping")
     public void onEvent(@Payload String payload, Acknowledgment ack) {
+        log.info("===> Received ShippingEvent...");
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
             if (event.type() == SagaEventType.SHIPMENT_FAILED) {
+                log.info("===> Shipment failed; orderId: {}", event.orderId());
                 eventUseCase.handleShipmentFailed(event.orderId());
             } else {
                 log.debug("Ignoring shipping event: {}", event.type());

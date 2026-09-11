@@ -98,14 +98,12 @@ class InventoryEventListenerIntegrationTest extends AbstractPostgresIntegrationT
     void orderCancellationRequested_releasesInventory() {
         var orderId = "order-" + UUID.randomUUID();
         kafkaTemplate.send(orderEventsTopic, orderId, orderPlacedJson(orderId, "product-1", 5));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(reservationRepository.findByOrderId(orderId)).isPresent());
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(reservationRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(
-                orderEventsTopic,
-                orderId,
-                sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
+                orderEventsTopic, orderId, sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
 
         await().atMost(10, SECONDS).untilAsserted(() -> {
             var rows = outboxRepository.findAll().stream()
@@ -127,8 +125,8 @@ class InventoryEventListenerIntegrationTest extends AbstractPostgresIntegrationT
     void paymentFailed_releasesInventory() {
         var orderId = "order-" + UUID.randomUUID();
         kafkaTemplate.send(orderEventsTopic, orderId, orderPlacedJson(orderId, "product-1", 5));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(reservationRepository.findByOrderId(orderId)).isPresent());
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(reservationRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(paymentEventsTopic, orderId, sagaEventJson(SagaEventType.PAYMENT_FAILED, orderId));
@@ -147,8 +145,8 @@ class InventoryEventListenerIntegrationTest extends AbstractPostgresIntegrationT
     void paymentRefunded_releasesInventory() {
         var orderId = "order-" + UUID.randomUUID();
         kafkaTemplate.send(orderEventsTopic, orderId, orderPlacedJson(orderId, "product-1", 5));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(reservationRepository.findByOrderId(orderId)).isPresent());
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(reservationRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(paymentEventsTopic, orderId, sagaEventJson(SagaEventType.PAYMENT_REFUNDED, orderId));

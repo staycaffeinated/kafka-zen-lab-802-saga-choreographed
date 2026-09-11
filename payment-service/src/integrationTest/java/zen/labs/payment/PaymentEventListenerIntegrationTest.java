@@ -62,10 +62,7 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     void inventoryReserved_processesPayment() {
         var orderId = "order-" + UUID.randomUUID();
 
-        kafkaTemplate.send(
-                inventoryEventsTopic,
-                orderId,
-                inventoryReservedJson(orderId, "500.00", "123 Main St"));
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
 
         await().atMost(10, SECONDS).untilAsserted(() -> {
             var rows = outboxRepository.findAll().stream()
@@ -88,10 +85,7 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     void inventoryReserved_excessAmount_paymentFailed() {
         var orderId = "order-" + UUID.randomUUID();
 
-        kafkaTemplate.send(
-                inventoryEventsTopic,
-                orderId,
-                inventoryReservedJson(orderId, "10001.00", "123 Main St"));
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "10001.00", "123 Main St"));
 
         await().atMost(10, SECONDS).untilAsserted(() -> {
             var rows = outboxRepository.findAll().stream()
@@ -106,10 +100,9 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     @DisplayName("SHIPMENT_FAILED event refunds payment and writes PAYMENT_REFUNDED outbox row")
     void shipmentFailed_refundsPayment() {
         var orderId = "order-" + UUID.randomUUID();
-        kafkaTemplate.send(
-                inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(paymentRepository.findByOrderId(orderId)).isPresent());
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(paymentRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(shippingEventsTopic, orderId, sagaEventJson(SagaEventType.SHIPMENT_FAILED, orderId));
@@ -133,16 +126,13 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     @DisplayName("ORDER_CANCELLATION_REQUESTED event refunds payment silently — no outbox row")
     void orderCancellationRequested_refundsPaymentSilently() {
         var orderId = "order-" + UUID.randomUUID();
-        kafkaTemplate.send(
-                inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(paymentRepository.findByOrderId(orderId)).isPresent());
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(paymentRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(
-                orderEventsTopic,
-                orderId,
-                sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
+                orderEventsTopic, orderId, sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
 
         await().atMost(10, SECONDS).untilAsserted(() -> {
             var payment = paymentRepository.findByOrderId(orderId);

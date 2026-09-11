@@ -34,6 +34,7 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
 
     @Override
     public void publishShipmentCreated(String orderId) {
+        log.info("===> Persisting shipment created record for order: {}", orderId);
         persist(
                 orderId,
                 SagaEventType.SHIPMENT_CREATED,
@@ -43,6 +44,7 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
 
     @Override
     public void publishShipmentFailed(String orderId, String reason) {
+        log.info("===> Persisting shipment failed record for order: {}", orderId);
         persist(
                 orderId,
                 SagaEventType.SHIPMENT_FAILED,
@@ -64,7 +66,7 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
                     .build());
-            log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
+            log.debug("===> Shipping Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {
             throw new ApplicationException("Failed to persist outbox event: " + type, e);
         }

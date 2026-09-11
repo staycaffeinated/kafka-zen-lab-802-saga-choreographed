@@ -99,16 +99,13 @@ class ShippingEventListenerIntegrationTest extends AbstractPostgresIntegrationTe
     @DisplayName("ORDER_CANCELLATION_REQUESTED event cancels shipment silently — no outbox row")
     void orderCancellationRequested_cancelsShipmentSilently() {
         var orderId = "order-" + UUID.randomUUID();
-        kafkaTemplate.send(
-                paymentEventsTopic, orderId, paymentProcessedJson(orderId, "123 Main St"));
-        await().atMost(10, SECONDS).untilAsserted(() ->
-                assertThat(shipmentRepository.findByOrderId(orderId)).isPresent());
+        kafkaTemplate.send(paymentEventsTopic, orderId, paymentProcessedJson(orderId, "123 Main St"));
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(shipmentRepository.findByOrderId(orderId))
+                .isPresent());
         outboxRepository.deleteAll();
 
         kafkaTemplate.send(
-                orderEventsTopic,
-                orderId,
-                sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
+                orderEventsTopic, orderId, sagaEventJson(SagaEventType.ORDER_CANCELLATION_REQUESTED, orderId));
 
         await().atMost(10, SECONDS).untilAsserted(() -> {
             var shipment = shipmentRepository.findByOrderId(orderId);

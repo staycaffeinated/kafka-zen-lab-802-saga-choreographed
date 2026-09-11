@@ -25,6 +25,8 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
     @Override
     @Transactional
     public void handleOrderPlaced(String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
+        log.info("===> Handling placed order: orderId: {}", orderId);
+
         var exceeded =
                 items.stream().filter(i -> i.quantity() > MAX_QUANTITY_PER_ITEM).findFirst();
         if (exceeded.isPresent()) {
@@ -38,7 +40,7 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
         }
         var reservation = InventoryReservation.forOrder(orderId);
         reservationDataStore.save(reservation);
-        log.info("Inventory reserved: orderId={}", orderId);
+        log.info("===> Inventory reserved: orderId={}", orderId);
         eventPublisher.publishInventoryReserved(orderId, amount, shippingAddress);
     }
 

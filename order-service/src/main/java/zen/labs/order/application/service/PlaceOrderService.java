@@ -32,6 +32,7 @@ public class PlaceOrderService implements PlaceOrderUseCase {
         if (cmd.idempotencyKey() != null) {
             var existingId = idempotencyKeyStore.findOrderId(cmd.idempotencyKey());
             if (existingId.isPresent()) {
+                log.info("===> Order already placed: existingId: {}", cmd.idempotencyKey());
                 return orderDataStore
                         .findByResourceId(existingId.get())
                         .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + existingId.get()));
@@ -52,11 +53,12 @@ public class PlaceOrderService implements PlaceOrderUseCase {
 
         if (cmd.idempotencyKey() != null) {
             idempotencyKeyStore.save(cmd.idempotencyKey(), saved.getResourceId());
+            log.info("===> Order saved to idempotency store: key: {}", cmd.idempotencyKey());
         }
 
         eventPublisher.publishOrderPlaced(
                 saved.getResourceId(), saved.getItems(), saved.totalAmount(), saved.getShippingAddress());
-        log.info("Order placed: orderId={}", saved.getResourceId());
+        log.info("===> Order placed: orderId={}", saved.getResourceId());
         return saved;
     }
 }

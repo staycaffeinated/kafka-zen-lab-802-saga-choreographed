@@ -5,6 +5,7 @@ package zen.labs.inventory.adapter.outbound.persistence;
 
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import zen.labs.inventory.adapter.outbound.persistence.entity.InventoryReservationJpaEntity;
 import zen.labs.inventory.adapter.outbound.persistence.repository.InventoryReservationRepository;
@@ -13,12 +14,14 @@ import zen.labs.inventory.domain.InventoryReservation;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryReservationJpaDataStore implements InventoryReservationDataStore {
 
     private final InventoryReservationRepository repository;
 
     @Override
     public InventoryReservation save(InventoryReservation domain) {
+        log.info("===> Inventory reservation saved: orderId={}", domain.getOrderId());
         return toDomain(repository.save(toEntity(domain)));
     }
 

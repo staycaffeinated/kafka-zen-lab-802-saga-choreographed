@@ -40,7 +40,7 @@ public class PaymentEventService implements HandlePaymentEventUseCase {
                 .processedAt(Instant.now())
                 .build();
         paymentDataStore.save(payment);
-        log.info("Payment processed: orderId={}", orderId);
+        log.info("===> Payment processed: orderId={}", orderId);
         eventPublisher.publishPaymentProcessed(orderId, shippingAddress);
     }
 
@@ -66,7 +66,7 @@ public class PaymentEventService implements HandlePaymentEventUseCase {
                 .ifPresentOrElse(
                         p -> {
                             paymentDataStore.update(p.withStatus(PaymentStatus.REFUNDED));
-                            log.info("Payment refunded (order cancelled): orderId={}", orderId);
+                            log.info("===> Payment refunded (order cancelled): orderId={}", orderId);
                         },
                         () -> log.debug("No payment to refund for cancelled order: orderId={}", orderId));
     }

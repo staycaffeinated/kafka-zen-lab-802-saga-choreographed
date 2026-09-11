@@ -30,10 +30,12 @@ public class OrderEventListener {
             topics = "${application.saga.topics.order-events}",
             groupId = "${spring.kafka.consumer.group-id}-order")
     public void onEvent(@Payload String payload, Acknowledgment ack) {
+        log.info("Received OrderEvent...");
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
             if (event.type() == SagaEventType.ORDER_CANCELLATION_REQUESTED) {
+                log.info("===> Order cancellation requested for orderId={}", event.orderId());
                 eventUseCase.handleOrderCancellationRequested(event.orderId());
             } else {
                 log.debug("Ignoring order event: {}", event.type());

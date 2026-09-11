@@ -83,7 +83,7 @@ public class InventoryEventPublisherAdapter implements InventoryEventPublisher {
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
                     .build());
-            log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
+            log.debug("===> Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {
             throw new ApplicationException("Failed to persist outbox event: " + type, e);
         }
