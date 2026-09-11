@@ -12,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-
 @Entity
 @Table(name = "outbox")
 @Getter
@@ -38,7 +36,6 @@ public class OutboxJpaEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String payload;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 }

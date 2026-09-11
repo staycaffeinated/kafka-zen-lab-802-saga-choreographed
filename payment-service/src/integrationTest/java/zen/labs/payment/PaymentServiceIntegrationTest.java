@@ -19,7 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import zen.labs.payment.adapter.outbound.persistence.repository.OutboxRepository;
+import zen.labs.payment.adapter.outbound.persistence.repository.PaymentRepository;
 import zen.labs.payment.application.port.inbound.HandlePaymentEventUseCase;
+import zen.labs.payment.domain.PaymentStatus;
 import zen.labs.payment.persistence.AbstractPostgresIntegrationTest;
 
 @ActiveProfiles({TEST, INTEGRATION_TEST})
@@ -33,12 +35,16 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private OutboxRepository outboxRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
     @Value("${application.saga.topics.payment-events}")
     private String paymentEventsTopic;
 
     @BeforeEach
-    void cleanOutbox() {
+    void cleanUp() {
         outboxRepository.deleteAll();
+        paymentRepository.deleteAll();
     }
 
     @Test
@@ -48,7 +54,7 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("handleInventoryReserved with amount within limit writes PAYMENT_PROCESSED outbox row")
+    @DisplayName("handleInventoryReserved with valid amount writes PAYMENT_PROCESSED outbox row")
     void handleInventoryReserved_validAmount_writesPaymentProcessedRow() {
         var orderId = "order-" + UUID.randomUUID();
 
@@ -59,11 +65,25 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
                 .toList();
         assertThat(rows).hasSize(1);
         var row = rows.get(0);
-        assertThat(row.getAggregateId()).isEqualTo(orderId);
         assertThat(row.getAggregateType()).isEqualTo(paymentEventsTopic);
         assertThat(row.getType()).isEqualTo("PAYMENT_PROCESSED");
         assertThat(row.getPayload()).contains(orderId);
         assertThat(row.getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("handleInventoryReserved with valid amount saves payment as PROCESSED")
+    void handleInventoryReserved_validAmount_savesPayment() {
+        var orderId = "order-" + UUID.randomUUID();
+        var amount = BigDecimal.valueOf(500);
+
+        eventUseCase.handleInventoryReserved(orderId, amount, "123 Main St, Springfield, IL 62701");
+
+        var payment = paymentRepository.findByOrderId(orderId);
+        assertThat(payment).isPresent();
+        assertThat(payment.get().getStatus()).isEqualTo(PaymentStatus.PROCESSED);
+        assertThat(payment.get().getAmount()).isEqualByComparingTo(amount);
+        assertThat(payment.get().getProcessedAt()).isNotNull();
     }
 
     @Test
@@ -81,8 +101,39 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("handleShipmentFailed always writes PAYMENT_REFUNDED outbox row")
-    void handleShipmentFailed_alwaysWritesPaymentRefundedRow() {
+    @DisplayName("handleInventoryReserved with amount over 10000 does not save a payment record")
+    void handleInventoryReserved_excessAmount_doesNotSavePayment() {
+        var orderId = "order-" + UUID.randomUUID();
+
+        eventUseCase.handleInventoryReserved(orderId, BigDecimal.valueOf(10_001), "123 Main St");
+
+        assertThat(paymentRepository.findByOrderId(orderId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("handleShipmentFailed when payment exists refunds it and writes PAYMENT_REFUNDED outbox row")
+    void handleShipmentFailed_withExistingPayment_refundsAndWritesOutboxRow() {
+        var orderId = "order-" + UUID.randomUUID();
+        eventUseCase.handleInventoryReserved(orderId, BigDecimal.valueOf(500), "123 Main St");
+        outboxRepository.deleteAll();
+
+        eventUseCase.handleShipmentFailed(orderId);
+
+        var payment = paymentRepository.findByOrderId(orderId);
+        assertThat(payment).isPresent();
+        assertThat(payment.get().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+
+        var rows = outboxRepository.findAll().stream()
+                .filter(r -> r.getAggregateId().equals(orderId))
+                .toList();
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getType()).isEqualTo("PAYMENT_REFUNDED");
+        assertThat(rows.get(0).getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("handleShipmentFailed when no payment still writes PAYMENT_REFUNDED outbox row")
+    void handleShipmentFailed_withNoPayment_stillWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();
 
         eventUseCase.handleShipmentFailed(orderId);
@@ -92,5 +143,31 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
                 .toList();
         assertThat(rows).hasSize(1);
         assertThat(rows.get(0).getType()).isEqualTo("PAYMENT_REFUNDED");
+    }
+
+    @Test
+    @DisplayName("handleOrderCancellationRequested when payment exists refunds it silently")
+    void handleOrderCancellationRequested_withExistingPayment_refundsPayment() {
+        var orderId = "order-" + UUID.randomUUID();
+        eventUseCase.handleInventoryReserved(orderId, BigDecimal.valueOf(500), "123 Main St");
+        outboxRepository.deleteAll();
+
+        eventUseCase.handleOrderCancellationRequested(orderId);
+
+        var payment = paymentRepository.findByOrderId(orderId);
+        assertThat(payment).isPresent();
+        assertThat(payment.get().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(outboxRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("handleOrderCancellationRequested when no payment does nothing")
+    void handleOrderCancellationRequested_withNoPayment_doesNothing() {
+        var orderId = "order-" + UUID.randomUUID();
+
+        eventUseCase.handleOrderCancellationRequested(orderId);
+
+        assertThat(paymentRepository.findByOrderId(orderId)).isEmpty();
+        assertThat(outboxRepository.findAll()).isEmpty();
     }
 }
