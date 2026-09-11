@@ -54,7 +54,8 @@ def ignoredClasses =
         ",**/DateTimeFormatConfiguration.java" +
         ",**/JacksonConfiguration.java" +
         ",**/LocalDateConverter.java" +
-        ",**/ResourceIdSupplierConfiguration.java"
+        ",**/ResourceIdSupplierConfiguration.java" +
+        ",**/SagaTopicsProperties.java"
 
 
 sonar {

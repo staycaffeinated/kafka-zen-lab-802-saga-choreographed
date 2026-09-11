@@ -1,4 +1,4 @@
-package zen.labs.order.infrastructure.config;
+package zen.labs.infrastructure.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
