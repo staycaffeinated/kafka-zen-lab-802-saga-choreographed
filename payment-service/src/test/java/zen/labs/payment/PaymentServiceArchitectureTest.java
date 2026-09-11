@@ -47,6 +47,14 @@ class PaymentServiceArchitectureTest {
             .resideInAnyPackage("zen.labs.payment.adapter..", "zen.labs.payment.infrastructure..");
 
     @ArchTest
+    static final ArchRule application_must_not_depend_on_adapter_components = noClasses()
+            .that()
+            .resideInAPackage("zen.labs.payment.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("zen.labs.adapters..");
+
+    @ArchTest
     static final ArchRule adapters_must_not_depend_on_infrastructure = noClasses()
             .that()
             .resideInAPackage("zen.labs.payment.adapter..")

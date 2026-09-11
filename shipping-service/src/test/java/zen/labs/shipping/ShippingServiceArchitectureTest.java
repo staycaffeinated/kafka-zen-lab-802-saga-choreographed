@@ -47,6 +47,14 @@ class ShippingServiceArchitectureTest {
             .resideInAnyPackage("zen.labs.shipping.adapter..", "zen.labs.shipping.infrastructure..");
 
     @ArchTest
+    static final ArchRule application_must_not_depend_on_adapter_components = noClasses()
+            .that()
+            .resideInAPackage("zen.labs.shipping.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("zen.labs.adapters..");
+
+    @ArchTest
     static final ArchRule adapters_must_not_depend_on_infrastructure = noClasses()
             .that()
             .resideInAPackage("zen.labs.shipping.adapter..")

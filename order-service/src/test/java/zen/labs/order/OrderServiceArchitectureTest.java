@@ -44,6 +44,14 @@ class OrderServiceArchitectureTest {
             .resideInAnyPackage("zen.labs.order.adapter..", "zen.labs.order.infrastructure..");
 
     @ArchTest
+    static final ArchRule application_must_not_depend_on_adapter_components = noClasses()
+            .that()
+            .resideInAPackage("zen.labs.order.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("zen.labs.adapters..");
+
+    @ArchTest
     static final ArchRule adapters_must_not_depend_on_infrastructure = noClasses()
             .that()
             .resideInAPackage("zen.labs.order.adapter..")

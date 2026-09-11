@@ -47,6 +47,14 @@ class InventoryServiceArchitectureTest {
             .resideInAnyPackage("zen.labs.inventory.adapter..", "zen.labs.inventory.infrastructure..");
 
     @ArchTest
+    static final ArchRule application_must_not_depend_on_adapter_components = noClasses()
+            .that()
+            .resideInAPackage("zen.labs.inventory.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("zen.labs.adapters..");
+
+    @ArchTest
     static final ArchRule adapters_must_not_depend_on_infrastructure = noClasses()
             .that()
             .resideInAPackage("zen.labs.inventory.adapter..")
