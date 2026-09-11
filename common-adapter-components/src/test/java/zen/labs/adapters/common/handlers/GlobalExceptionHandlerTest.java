@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -15,7 +14,6 @@ import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.*;
 import jakarta.validation.executable.ExecutableValidator;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -54,21 +52,6 @@ import zen.labs.application.common.exceptions.UnprocessableRequestException;
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler exceptionHandlerUnderTest = new GlobalExceptionHandler(new JsonMapper());
-
-    /**
-     * Test the condition the server raised an EntityNotFoundException
-     */
-    @Test
-    void onEntityNotFoundException_shouldReturnBadRequest() {
-        EntityNotFoundException ex = new EntityNotFoundException("some entity");
-        ResponseEntity<ProblemDetail> response = exceptionHandlerUnderTest.handleEntityNotFound(ex);
-        assertThat(response).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-
-        assertThat(response.getBody()).isNotNull();
-        // Check the problem body for a status field matching the http status code
-        assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT.value());
-    }
 
     /**
      * Test the condition the server raised a DataIntegrityViolation
@@ -130,25 +113,6 @@ class GlobalExceptionHandlerTest {
                 exceptionHandlerUnderTest.handleMethodArgumentTypeMismatch(ex, webRequest);
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-    }
-
-    /**
-     * Test the condition the server raised a SQLException
-     */
-    @Test
-    void onSQLException_shouldReturnBadRequest() {
-        WebRequest mockWebRequest = mock(WebRequest.class);
-        SQLException ex = mock(SQLException.class);
-        when(ex.getMessage()).thenReturn("my sql exception message");
-        when(ex.getSQLState()).thenReturn("sql state");
-        when(ex.getErrorCode()).thenReturn(1234);
-
-        ResponseEntity<ProblemDetail> response = exceptionHandlerUnderTest.handleSQLException(ex, mockWebRequest);
-        assertThat(response).isNotNull();
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE.value());
-        assertThat(response.getBody().getTitle()).isNotEmpty();
     }
 
     @Test

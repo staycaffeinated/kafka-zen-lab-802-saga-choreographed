@@ -1,7 +1,6 @@
 package zen.labs.adapters.common.handlers;
 
 import jakarta.validation.ConstraintViolation;
-import java.sql.SQLException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -99,31 +98,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         problemDetail.setProperty("errors", jsonArray);
         return ResponseEntity.of(problemDetail).build();
-    }
-
-    /**
-     * Handles EntityNotFoundException. Created to encapsulate errors with more detail than
-     * jakarta.persistence.EntityNotFoundException.
-     *
-     * @param ex the EntityNotFoundException
-     * @return the ApiError object
-     */
-    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleEntityNotFound(jakarta.persistence.EntityNotFoundException ex) {
-        return problemDescription("The requested entity was not found", ex);
-    }
-
-    /**
-     * Handles SQL exception.
-     *
-     * @param ex Exception
-     * @param request WebRequest
-     * @return ResponseEntity
-     */
-    @ExceptionHandler(SQLException.class)
-    public ResponseEntity<ProblemDetail> handleSQLException(SQLException ex, WebRequest request) {
-        String message = String.format("Database Error: %s : %s ", ex.getErrorCode(), ex.getLocalizedMessage());
-        return problemDescription(message, ex, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     /**
