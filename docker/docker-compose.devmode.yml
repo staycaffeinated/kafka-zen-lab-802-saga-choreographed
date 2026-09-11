@@ -153,8 +153,10 @@ services:
     networks:
       - confluent_network
     depends_on:
-      - broker
-      - schema-registry
+      broker:
+        condition: service_started
+      schema-registry:
+        condition: service_started
       connect:
         condition: service_healthy
     ports:
