@@ -65,7 +65,6 @@ class OrderEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("ORDER_PLACED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 
@@ -83,7 +82,6 @@ class OrderEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("ORDER_CANCELLATION_REQUESTED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 

@@ -3,7 +3,6 @@
  */
 package zen.labs.shipping.adapter.outbound.persistence;
 
-import java.time.Instant;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,7 +63,6 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
                     .aggregateId(orderId)
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
-                    .createdAt(Instant.now())
                     .build());
             log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {

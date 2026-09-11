@@ -61,7 +61,6 @@ class ShippingEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("SHIPMENT_CREATED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 
@@ -79,7 +78,6 @@ class ShippingEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("SHIPMENT_FAILED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 }

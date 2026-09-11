@@ -1,7 +1,6 @@
 package zen.labs.order.adapter.outbound.persistence;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +68,6 @@ public class OrderEventPublisherAdapter implements OrderEventPublisher {
                     .aggregateId(orderId)
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
-                    .createdAt(Instant.now())
                     .build());
             log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {

@@ -59,7 +59,6 @@ class InventoryEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("INVENTORY_RESERVED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 

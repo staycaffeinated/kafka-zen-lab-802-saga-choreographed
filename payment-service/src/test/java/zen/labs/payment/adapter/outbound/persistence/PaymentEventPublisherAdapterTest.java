@@ -58,7 +58,6 @@ class PaymentEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("PAYMENT_PROCESSED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 
@@ -76,7 +75,6 @@ class PaymentEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("PAYMENT_FAILED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 
@@ -94,7 +92,6 @@ class PaymentEventPublisherAdapterTest {
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
             assertThat(row.getType()).isEqualTo("PAYMENT_REFUNDED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
-            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 }

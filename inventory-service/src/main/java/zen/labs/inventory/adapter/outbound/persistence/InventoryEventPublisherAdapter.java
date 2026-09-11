@@ -1,7 +1,6 @@
 package zen.labs.inventory.adapter.outbound.persistence;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +82,6 @@ public class InventoryEventPublisherAdapter implements InventoryEventPublisher {
                     .aggregateId(orderId)
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
-                    .createdAt(Instant.now())
                     .build());
             log.debug("Outbox row persisted: type={} orderId={}", type, orderId);
         } catch (Exception e) {
