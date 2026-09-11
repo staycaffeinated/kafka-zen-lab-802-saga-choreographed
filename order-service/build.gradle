@@ -98,7 +98,7 @@ jib {
         }
     }
     to {
-        image = 'kafka-zen-lab-801-order-service'
+        image = 'kafka-zen-lab-802-choreo-order-service'
         tags = [ 'latest', version ]
     }
     container {
