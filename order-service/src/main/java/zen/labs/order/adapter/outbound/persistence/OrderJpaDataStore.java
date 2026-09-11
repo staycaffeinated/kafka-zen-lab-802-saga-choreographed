@@ -35,11 +35,6 @@ public class OrderJpaDataStore implements OrderDataStore {
     }
 
     @Override
-    public List<Order> findAll() {
-        return orderRepository.findAll().stream().map(this::toDomain).toList();
-    }
-
-    @Override
     public Order save(Order domain) {
         return toDomain(orderRepository.save(toEntity(domain)));
     }
@@ -53,14 +48,6 @@ public class OrderJpaDataStore implements OrderDataStore {
                     return orderRepository.save(entity);
                 })
                 .map(this::toDomain);
-    }
-
-    @Override
-    public Optional<Order> deleteByResourceId(@NonNull String resourceId) {
-        return orderRepository.findByResourceId(resourceId).map(entity -> {
-            orderRepository.delete(entity);
-            return toDomain(entity);
-        });
     }
 
     private Order toDomain(OrderJpaEntity entity) {

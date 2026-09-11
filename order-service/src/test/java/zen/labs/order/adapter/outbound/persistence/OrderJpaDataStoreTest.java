@@ -172,58 +172,6 @@ class OrderJpaDataStoreTest {
     }
 
     @Nested
-    @DisplayName("findAll")
-    class FindAll {
-
-        @Test
-        @DisplayName("should return list of mapped domain Orders")
-        void shouldReturnMappedDomainList() {
-            // Given
-            OrderJpaEntity entity1 = buildOrderEntity();
-
-            OrderJpaEntity entity2 = new OrderJpaEntity();
-            entity2.setResourceId("order-def-456");
-            entity2.setCustomerId("customer-abc-789");
-            entity2.setStatus(OrderStatus.CONFIRMED);
-            entity2.setShippingAddress("456 Oak Ave, Othertown, USA");
-            entity2.setCreatedAt(Instant.parse("2026-01-16T12:00:00Z"));
-            entity2.setItems(new ArrayList<>());
-
-            when(orderRepository.findAll()).thenReturn(List.of(entity1, entity2));
-
-            // When
-            List<Order> result = orderJpaDataStore.findAll();
-
-            // Then
-            assertThat(result).hasSize(2);
-
-            assertThat(result.get(0).getResourceId()).isEqualTo(RESOURCE_ID);
-            assertThat(result.get(0).getStatus()).isEqualTo(OrderStatus.PENDING);
-            assertThat(result.get(0).getItems()).hasSize(1);
-
-            assertThat(result.get(1).getResourceId()).isEqualTo("order-def-456");
-            assertThat(result.get(1).getStatus()).isEqualTo(OrderStatus.CONFIRMED);
-            assertThat(result.get(1).getItems()).isEmpty();
-
-            verify(orderRepository).findAll();
-        }
-
-        @Test
-        @DisplayName("should return empty list when no orders exist")
-        void shouldReturnEmptyList_whenNoOrdersExist() {
-            // Given
-            when(orderRepository.findAll()).thenReturn(List.of());
-
-            // When
-            List<Order> result = orderJpaDataStore.findAll();
-
-            // Then
-            assertThat(result).isEmpty();
-            verify(orderRepository).findAll();
-        }
-    }
-
-    @Nested
     @DisplayName("save")
     class Save {
 
@@ -342,54 +290,6 @@ class OrderJpaDataStoreTest {
             // Then
             assertThat(result).isEmpty();
             verify(orderRepository).findByResourceId(RESOURCE_ID);
-        }
-    }
-
-    @Nested
-    @DisplayName("deleteByResourceId")
-    class DeleteByResourceId {
-
-        @Test
-        @DisplayName("should delete order and return copy of deleted order when order exists")
-        void shouldDeleteEntity_andReturnMappedDomain_whenEntityFound() {
-            // Given
-            OrderJpaEntity entity = buildOrderEntity();
-            when(orderRepository.findByResourceId(RESOURCE_ID)).thenReturn(Optional.of(entity));
-
-            // When
-            Optional<Order> result = orderJpaDataStore.deleteByResourceId(RESOURCE_ID);
-
-            // Then
-            assertThat(result).isPresent();
-            Order deletedOrder = result.get();
-            assertThat(deletedOrder.getResourceId()).isEqualTo(RESOURCE_ID);
-            assertThat(deletedOrder.getCustomerId()).isEqualTo(CUSTOMER_ID);
-            assertThat(deletedOrder.getStatus()).isEqualTo(OrderStatus.PENDING);
-
-            verify(orderRepository).findByResourceId(RESOURCE_ID);
-            verify(orderRepository).delete(entity);
-        }
-
-        @Test
-        @DisplayName("Should return empty when the order is not found")
-        void shouldReturnEmptyOptional_whenEntityNotFound() {
-            // Given
-            when(orderRepository.findByResourceId(RESOURCE_ID)).thenReturn(Optional.empty());
-
-            // When
-            Optional<Order> result = orderJpaDataStore.deleteByResourceId(RESOURCE_ID);
-
-            // Then
-            assertThat(result).isEmpty();
-            verify(orderRepository).findByResourceId(RESOURCE_ID);
-        }
-
-        @ParameterizedTest
-        @NullSource
-        @DisplayName("Should throw exception when the order id is null")
-        void shouldThrowException_whenIdIsNull(String resourceId) {
-            assertThatThrownBy(() -> orderJpaDataStore.deleteByResourceId(resourceId))
-                    .isInstanceOf(NullPointerException.class);
         }
     }
 }

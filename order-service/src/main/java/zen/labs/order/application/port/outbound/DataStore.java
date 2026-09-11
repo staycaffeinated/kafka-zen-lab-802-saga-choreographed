@@ -4,7 +4,6 @@
 
 package zen.labs.order.application.port.outbound;
 
-import java.util.List;
 import java.util.Optional;
 import lombok.NonNull;
 
@@ -24,11 +23,6 @@ public interface DataStore<T> {
     Optional<T> findByResourceId(@NonNull String resourceId);
 
     /**
-     * Retrieve all instances of {@code T}.
-     */
-    List<T> findAll();
-
-    /**
      * Insert {@code item} into the database, returning the persisted representation
      * (for instance, a resourceId is assigned to an object when its persisted; that
      * resourceId is passed back to the client to enable the client to recall the object).
@@ -40,10 +34,4 @@ public interface DataStore<T> {
      * If an attempt is made to update a non-existent item, the returned {@code Optional} is empty.
      */
     Optional<T> update(T item);
-
-    /**
-     * Delete the Domain object that has the given {@code resourceId}.
-     * Attempts to delete a non-existent object are quietly ignored.
-     */
-    Optional<T> deleteByResourceId(@NonNull String resourceId);
 }
