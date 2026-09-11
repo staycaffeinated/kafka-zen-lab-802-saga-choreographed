@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-CONNECT_URL="http://kafka-connect:8083"
+CONNECT_URL="http://connect:8083"
 
 echo "Registering Debezium connectors..."
 for file in /connectors/*.json; do
