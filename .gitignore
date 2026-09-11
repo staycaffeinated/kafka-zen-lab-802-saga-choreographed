@@ -186,6 +186,10 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+### Docker scratch files
+docker/postgres
+
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij,gradle,java,kotlin
 
 ### macOS ###
