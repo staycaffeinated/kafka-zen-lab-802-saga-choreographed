@@ -38,11 +38,9 @@ public class PaymentEventListener {
             } else {
                 log.debug("Ignoring payment event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process payment event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }

@@ -33,11 +33,9 @@ public class PaymentEventListener {
                 case PAYMENT_FAILED, PAYMENT_REFUNDED -> eventUseCase.handleRelease(event.orderId());
                 default -> log.debug("Ignoring payment event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process payment event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }

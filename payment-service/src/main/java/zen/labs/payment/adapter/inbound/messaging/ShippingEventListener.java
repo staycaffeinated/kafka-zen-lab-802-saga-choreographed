@@ -38,11 +38,9 @@ public class ShippingEventListener {
             } else {
                 log.debug("Ignoring shipping event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process shipping event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }

@@ -40,11 +40,9 @@ public class OrderEventListener {
                 case ORDER_CANCELLATION_REQUESTED -> eventUseCase.handleRelease(event.orderId());
                 default -> log.debug("Ignoring order event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process order event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }

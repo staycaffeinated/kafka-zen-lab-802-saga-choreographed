@@ -35,11 +35,9 @@ public class SagaEventListener {
             MDC.put("eventType", event.type().name());
             log.debug("Received saga event: type={} orderId={}", event.type(), event.orderId());
             dispatch(event);
-        } catch (Exception e) {
-            log.error("Failed to process saga event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 

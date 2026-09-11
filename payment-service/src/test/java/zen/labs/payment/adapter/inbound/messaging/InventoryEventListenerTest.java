@@ -1,7 +1,9 @@
 package zen.labs.payment.adapter.inbound.messaging;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -87,14 +89,16 @@ class InventoryEventListenerTest {
     class ErrorHandling {
 
         @Test
-        @DisplayName("should acknowledge and not propagate exception when payload cannot be parsed")
-        void shouldAckEvenOnParseFailure() throws Exception {
+        @DisplayName("should propagate exception and not acknowledge when payload cannot be parsed")
+        void shouldPropagateException_whenParseFails() throws Exception {
             doThrow(new RuntimeException("bad json")).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
 
-            listener.onEvent(PAYLOAD, ack);
+            assertThatThrownBy(() -> listener.onEvent(PAYLOAD, ack))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("bad json");
 
             verifyNoInteractions(eventUseCase);
-            verify(ack).acknowledge();
+            verify(ack, never()).acknowledge();
         }
     }
 }

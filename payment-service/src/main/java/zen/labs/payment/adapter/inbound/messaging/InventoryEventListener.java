@@ -38,11 +38,9 @@ public class InventoryEventListener {
             } else {
                 log.debug("Ignoring inventory event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process inventory event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }

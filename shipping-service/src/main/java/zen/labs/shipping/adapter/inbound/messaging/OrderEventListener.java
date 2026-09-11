@@ -38,11 +38,9 @@ public class OrderEventListener {
             } else {
                 log.debug("Ignoring order event: {}", event.type());
             }
-        } catch (Exception e) {
-            log.error("Failed to process order event: {}", payload, e);
+            ack.acknowledge();
         } finally {
             MDC.clear();
-            ack.acknowledge();
         }
     }
 }
