@@ -17,13 +17,15 @@ import zen.labs.inventory.domain.InventoryReservation;
 @Slf4j
 public class InventoryEventService implements HandleInventoryEventUseCase {
 
+    private static final int MAX_QUANTITY_PER_ITEM = 100;
+
     private final InventoryReservationDataStore reservationDataStore;
     private final InventoryEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public void handleOrderPlaced(String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
-        var exceeded = items.stream().filter(i -> i.quantity() > 100).findFirst();
+        var exceeded = items.stream().filter(i -> i.quantity() > MAX_QUANTITY_PER_ITEM).findFirst();
         if (exceeded.isPresent()) {
             log.warn(
                     "Inventory reservation failed: orderId={} productId={}",
