@@ -23,7 +23,7 @@ import zen.labs.order.adapter.outbound.persistence.repository.OutboxRepository;
 import zen.labs.order.domain.OrderItem;
 
 @ExtendWith(MockitoExtension.class)
-class OutboxOrderEventPublisherTest {
+class OrderEventPublisherAdapterTest {
 
     @Mock
     private OutboxRepository outboxRepository;
@@ -35,12 +35,12 @@ class OutboxOrderEventPublisherTest {
     private static final String ORDER_ID = "order-001";
     private static final String MOCK_PAYLOAD = "{\"orderId\":\"order-001\"}";
 
-    private OutboxOrderEventPublisher publisher;
+    private OrderEventPublisherAdapter publisher;
 
     @BeforeEach
     void setUp() throws Exception {
         when(jsonMapper.writeValueAsString(any())).thenReturn(MOCK_PAYLOAD);
-        publisher = new OutboxOrderEventPublisher(outboxRepository, jsonMapper, TOPIC);
+        publisher = new OrderEventPublisherAdapter(outboxRepository, jsonMapper, TOPIC);
     }
 
     private OutboxJpaEntity captureRow() {

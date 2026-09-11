@@ -18,13 +18,13 @@ import zen.labs.shipping.application.port.outbound.ShippingEventPublisher;
 
 @Component
 @Slf4j
-public class OutboxShippingEventPublisher implements ShippingEventPublisher {
+public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
 
     private final OutboxRepository outboxRepository;
     private final JsonMapper jsonMapper;
     private final String shippingEventsTopic;
 
-    public OutboxShippingEventPublisher(
+    public ShippingEventPublisherAdapter(
             OutboxRepository outboxRepository,
             JsonMapper jsonMapper,
             @Value("${application.saga.topics.shipping-events}") String shippingEventsTopic) {

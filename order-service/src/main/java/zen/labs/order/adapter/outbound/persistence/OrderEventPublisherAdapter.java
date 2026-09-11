@@ -19,13 +19,13 @@ import zen.labs.order.domain.OrderItem;
 
 @Component
 @Slf4j
-public class OutboxOrderEventPublisher implements OrderEventPublisher {
+public class OrderEventPublisherAdapter implements OrderEventPublisher {
 
     private final OutboxRepository outboxRepository;
     private final JsonMapper jsonMapper;
     private final String orderEventsTopic;
 
-    public OutboxOrderEventPublisher(
+    public OrderEventPublisherAdapter(
             OutboxRepository outboxRepository,
             JsonMapper jsonMapper,
             @Value("${application.saga.topics.order-events}") String orderEventsTopic) {

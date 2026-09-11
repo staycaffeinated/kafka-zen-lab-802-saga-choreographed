@@ -1,11 +1,13 @@
-package zen.labs.inventory.adapter.outbound.persistence;
+/*
+ * Copyright 2026 [CopyrightOwner]
+ */
+package zen.labs.shipping.adapter.outbound.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,11 +17,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tools.jackson.databind.json.JsonMapper;
-import zen.labs.inventory.adapter.outbound.persistence.entity.OutboxJpaEntity;
-import zen.labs.inventory.adapter.outbound.persistence.repository.OutboxRepository;
+import zen.labs.shipping.adapter.outbound.persistence.entity.OutboxJpaEntity;
+import zen.labs.shipping.adapter.outbound.persistence.repository.OutboxRepository;
 
 @ExtendWith(MockitoExtension.class)
-class OutboxInventoryEventPublisherTest {
+class ShippingEventPublisherAdapterTest {
 
     @Mock
     private OutboxRepository outboxRepository;
@@ -27,16 +29,16 @@ class OutboxInventoryEventPublisherTest {
     @Mock
     private JsonMapper jsonMapper;
 
-    private static final String TOPIC = "kafka-zen.lab-802.saga.inventory.events";
+    private static final String TOPIC = "kafka-zen.lab-802.saga.shipping.events";
     private static final String ORDER_ID = "order-001";
     private static final String MOCK_PAYLOAD = "{\"orderId\":\"order-001\"}";
 
-    private OutboxInventoryEventPublisher publisher;
+    private ShippingEventPublisherAdapter publisher;
 
     @BeforeEach
     void setUp() throws Exception {
         when(jsonMapper.writeValueAsString(any())).thenReturn(MOCK_PAYLOAD);
-        publisher = new OutboxInventoryEventPublisher(outboxRepository, jsonMapper, TOPIC);
+        publisher = new ShippingEventPublisherAdapter(outboxRepository, jsonMapper, TOPIC);
     }
 
     private OutboxJpaEntity captureRow() {
@@ -46,52 +48,38 @@ class OutboxInventoryEventPublisherTest {
     }
 
     @Nested
-    @DisplayName("publishInventoryReserved")
-    class PublishInventoryReserved {
+    @DisplayName("publishShipmentCreated")
+    class PublishShipmentCreated {
 
         @Test
-        @DisplayName("should save row with INVENTORY_RESERVED type and routing fields")
+        @DisplayName("should save row with SHIPMENT_CREATED type and routing fields")
         void shouldSaveCorrectOutboxRow() {
-            publisher.publishInventoryReserved(ORDER_ID, BigDecimal.valueOf(50), "123 Main St");
+            publisher.publishShipmentCreated(ORDER_ID);
 
             var row = captureRow();
             assertThat(row.getAggregateType()).isEqualTo(TOPIC);
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
-            assertThat(row.getType()).isEqualTo("INVENTORY_RESERVED");
+            assertThat(row.getType()).isEqualTo("SHIPMENT_CREATED");
             assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
             assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 
     @Nested
-    @DisplayName("publishInventoryReservationFailed")
-    class PublishInventoryReservationFailed {
+    @DisplayName("publishShipmentFailed")
+    class PublishShipmentFailed {
 
         @Test
-        @DisplayName("should save row with INVENTORY_RESERVATION_FAILED type")
+        @DisplayName("should save row with SHIPMENT_FAILED type")
         void shouldSaveCorrectOutboxRow() {
-            publisher.publishInventoryReservationFailed(ORDER_ID, "Insufficient stock for product: p-1");
+            publisher.publishShipmentFailed(ORDER_ID, "Shipping address is required");
 
             var row = captureRow();
             assertThat(row.getAggregateType()).isEqualTo(TOPIC);
             assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
-            assertThat(row.getType()).isEqualTo("INVENTORY_RESERVATION_FAILED");
-        }
-    }
-
-    @Nested
-    @DisplayName("publishInventoryReleased")
-    class PublishInventoryReleased {
-
-        @Test
-        @DisplayName("should save row with INVENTORY_RELEASED type")
-        void shouldSaveCorrectOutboxRow() {
-            publisher.publishInventoryReleased(ORDER_ID);
-
-            var row = captureRow();
-            assertThat(row.getAggregateType()).isEqualTo(TOPIC);
-            assertThat(row.getAggregateId()).isEqualTo(ORDER_ID);
-            assertThat(row.getType()).isEqualTo("INVENTORY_RELEASED");
+            assertThat(row.getType()).isEqualTo("SHIPMENT_FAILED");
+            assertThat(row.getPayload()).isEqualTo(MOCK_PAYLOAD);
+            assertThat(row.getCreatedAt()).isNotNull();
         }
     }
 }

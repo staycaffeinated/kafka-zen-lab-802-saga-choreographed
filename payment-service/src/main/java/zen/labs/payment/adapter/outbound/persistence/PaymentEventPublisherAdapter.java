@@ -1,6 +1,5 @@
-package zen.labs.inventory.adapter.outbound.persistence;
+package zen.labs.payment.adapter.outbound.persistence;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -10,76 +9,64 @@ import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
 import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.application.common.exceptions.ApplicationException;
-import zen.labs.inventory.adapter.outbound.persistence.entity.OutboxJpaEntity;
-import zen.labs.inventory.adapter.outbound.persistence.repository.OutboxRepository;
-import zen.labs.inventory.application.port.outbound.InventoryEventPublisher;
+import zen.labs.payment.adapter.outbound.persistence.entity.OutboxJpaEntity;
+import zen.labs.payment.adapter.outbound.persistence.repository.OutboxRepository;
+import zen.labs.payment.application.port.outbound.PaymentEventPublisher;
 
 @Component
 @Slf4j
-public class OutboxInventoryEventPublisher implements InventoryEventPublisher {
+public class PaymentEventPublisherAdapter implements PaymentEventPublisher {
 
     private final OutboxRepository outboxRepository;
     private final JsonMapper jsonMapper;
-    private final String inventoryEventsTopic;
+    private final String paymentEventsTopic;
 
-    public OutboxInventoryEventPublisher(
+    public PaymentEventPublisherAdapter(
             OutboxRepository outboxRepository,
             JsonMapper jsonMapper,
-            @Value("${application.saga.topics.inventory-events}") String inventoryEventsTopic) {
+            @Value("${application.saga.topics.payment-events}") String paymentEventsTopic) {
         this.outboxRepository = outboxRepository;
         this.jsonMapper = jsonMapper;
-        this.inventoryEventsTopic = inventoryEventsTopic;
+        this.paymentEventsTopic = paymentEventsTopic;
     }
 
     @Override
-    public void publishInventoryReserved(String orderId, BigDecimal amount, String shippingAddress) {
+    public void publishPaymentProcessed(String orderId, String shippingAddress) {
         persist(
                 orderId,
-                SagaEventType.INVENTORY_RESERVED,
+                SagaEventType.PAYMENT_PROCESSED,
                 new SagaEvent(
                         UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RESERVED,
+                        SagaEventType.PAYMENT_PROCESSED,
                         orderId,
                         null,
                         null,
-                        amount,
+                        null,
                         shippingAddress));
     }
 
     @Override
-    public void publishInventoryReservationFailed(String orderId, String reason) {
+    public void publishPaymentFailed(String orderId, String reason) {
         persist(
                 orderId,
-                SagaEventType.INVENTORY_RESERVATION_FAILED,
+                SagaEventType.PAYMENT_FAILED,
                 new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RESERVATION_FAILED,
-                        orderId,
-                        reason,
-                        null,
-                        null,
-                        null));
+                        UUID.randomUUID().toString(), SagaEventType.PAYMENT_FAILED, orderId, reason, null, null, null));
     }
 
     @Override
-    public void publishInventoryReleased(String orderId) {
+    public void publishPaymentRefunded(String orderId) {
         persist(
                 orderId,
-                SagaEventType.INVENTORY_RELEASED,
+                SagaEventType.PAYMENT_REFUNDED,
                 new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RELEASED,
-                        orderId,
-                        null,
-                        null,
-                        null,
-                        null));
+                        UUID.randomUUID().toString(), SagaEventType.PAYMENT_REFUNDED, orderId, null, null, null, null));
     }
 
     private void persist(String orderId, SagaEventType type, SagaEvent event) {
         try {
             outboxRepository.save(OutboxJpaEntity.builder()
-                    .aggregateType(inventoryEventsTopic)
+                    .aggregateType(paymentEventsTopic)
                     .aggregateId(orderId)
                     .type(type.name())
                     .payload(jsonMapper.writeValueAsString(event))
