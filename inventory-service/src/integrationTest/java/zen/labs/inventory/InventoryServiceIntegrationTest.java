@@ -19,10 +19,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import zen.labs.inventory.adapter.outbound.persistence.repository.InventoryReservationRepository;
 import zen.labs.inventory.adapter.outbound.persistence.repository.OutboxRepository;
 import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
 import zen.labs.inventory.application.port.inbound.OrderedItem;
 import zen.labs.inventory.common.persistence.AbstractPostgresIntegrationTest;
+import zen.labs.inventory.domain.ReservationStatus;
 
 @ActiveProfiles({TEST, INTEGRATION_TEST})
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -35,12 +37,16 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     @Autowired
     private OutboxRepository outboxRepository;
 
+    @Autowired
+    private InventoryReservationRepository reservationRepository;
+
     @Value("${application.saga.topics.inventory-events}")
     private String inventoryEventsTopic;
 
     @BeforeEach
-    void cleanOutbox() {
+    void cleanUp() {
         outboxRepository.deleteAll();
+        reservationRepository.deleteAll();
     }
 
     @Test
@@ -71,6 +77,23 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("handleOrderPlaced with valid qty saves reservation as RESERVED")
+    void handleOrderPlaced_validQty_savesReservation() {
+        var orderId = "order-" + UUID.randomUUID();
+
+        eventUseCase.handleOrderPlaced(
+                orderId,
+                List.of(new OrderedItem("product-1", 5)),
+                BigDecimal.valueOf(500),
+                "123 Main St, Springfield, IL 62701");
+
+        var reservation = reservationRepository.findByOrderId(orderId);
+        assertThat(reservation).isPresent();
+        assertThat(reservation.get().getStatus()).isEqualTo(ReservationStatus.RESERVED);
+        assertThat(reservation.get().getReservedAt()).isNotNull();
+    }
+
+    @Test
     @DisplayName("handleOrderPlaced with qty > 100 writes INVENTORY_RESERVATION_FAILED outbox row")
     void handleOrderPlaced_excessQty_writesReservationFailedRow() {
         var orderId = "order-" + UUID.randomUUID();
@@ -86,8 +109,44 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("handleRelease writes INVENTORY_RELEASED outbox row")
-    void handleRelease_writesInventoryReleasedRow() {
+    @DisplayName("handleOrderPlaced with qty > 100 does not create a reservation record")
+    void handleOrderPlaced_excessQty_doesNotSaveReservation() {
+        var orderId = "order-" + UUID.randomUUID();
+
+        eventUseCase.handleOrderPlaced(
+                orderId, List.of(new OrderedItem("product-1", 101)), BigDecimal.valueOf(500), "123 Main St");
+
+        assertThat(reservationRepository.findByOrderId(orderId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("handleRelease when reservation exists transitions it to RELEASED and writes outbox row")
+    void handleRelease_withExistingReservation_releasesAndWritesOutboxRow() {
+        var orderId = "order-" + UUID.randomUUID();
+        eventUseCase.handleOrderPlaced(
+                orderId,
+                List.of(new OrderedItem("product-1", 5)),
+                BigDecimal.valueOf(500),
+                "123 Main St");
+        outboxRepository.deleteAll();
+
+        eventUseCase.handleRelease(orderId);
+
+        var reservation = reservationRepository.findByOrderId(orderId);
+        assertThat(reservation).isPresent();
+        assertThat(reservation.get().getStatus()).isEqualTo(ReservationStatus.RELEASED);
+
+        var rows = outboxRepository.findAll().stream()
+                .filter(r -> r.getAggregateId().equals(orderId))
+                .toList();
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getType()).isEqualTo("INVENTORY_RELEASED");
+        assertThat(rows.get(0).getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("handleRelease when no reservation still writes INVENTORY_RELEASED outbox row")
+    void handleRelease_withNoReservation_stillWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();
 
         eventUseCase.handleRelease(orderId);
