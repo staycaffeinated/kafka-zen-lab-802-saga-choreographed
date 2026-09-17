@@ -63,7 +63,7 @@ class PaymentEventServiceTest {
                     .orderId(ORDER_ID)
                     .amount(BigDecimal.valueOf(50))
                     .status(PaymentStatus.PROCESSED)
-                    .processedAt(Instant.now())
+                    .processedAt(Instant.parse("2026-01-01T00:00:00Z"))
                     .build();
             when(paymentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
 

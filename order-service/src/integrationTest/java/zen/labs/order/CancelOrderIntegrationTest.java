@@ -84,7 +84,8 @@ class CancelOrderIntegrationTest extends AbstractPostgresIntegrationTest {
         var order = placeOrder();
         sagaEventHandler.onShipmentCreated(order.getResourceId());
 
-        assertThatThrownBy(() -> cancelOrderUseCase.cancelOrder(order.getResourceId()))
+        var orderId = order.getResourceId();
+        assertThatThrownBy(() -> cancelOrderUseCase.cancelOrder(orderId))
                 .isInstanceOf(UnprocessableRequestException.class)
                 .hasMessageContaining("CONFIRMED");
     }
@@ -95,7 +96,8 @@ class CancelOrderIntegrationTest extends AbstractPostgresIntegrationTest {
         var order = placeOrder();
         sagaEventHandler.onInventoryReservationFailed(order.getResourceId());
 
-        assertThatThrownBy(() -> cancelOrderUseCase.cancelOrder(order.getResourceId()))
+        var orderId = order.getResourceId();
+        assertThatThrownBy(() -> cancelOrderUseCase.cancelOrder(orderId))
                 .isInstanceOf(UnprocessableRequestException.class)
                 .hasMessageContaining("CANCELLED");
     }

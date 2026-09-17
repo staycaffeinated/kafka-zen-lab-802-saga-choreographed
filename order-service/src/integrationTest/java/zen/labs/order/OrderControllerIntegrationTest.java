@@ -8,6 +8,7 @@ import static zen.labs.infrastructure.profiles.SpringProfiles.TEST;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -188,7 +189,7 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
                     .hasStatus(HttpStatus.OK)
                     .bodyJson()
                     .extractingPath("$")
-                    .asList()
+                    .asInstanceOf(InstanceOfAssertFactories.LIST)
                     .hasSize(2);
         }
 
@@ -204,7 +205,7 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
                     .hasStatus(HttpStatus.OK)
                     .bodyJson()
                     .extractingPath("$")
-                    .asList()
+                    .asInstanceOf(InstanceOfAssertFactories.LIST)
                     .isEmpty();
         }
 
@@ -246,7 +247,7 @@ class OrderControllerIntegrationTest extends AbstractPostgresIntegrationTest {
                     .uri(BASE_URL + "/{id}/cancel", order.getResourceId())
                     .exchange()
                     .assertThat()
-                    .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+                    .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
         }
 
         @Test

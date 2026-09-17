@@ -63,7 +63,7 @@ class ShipmentEventServiceTest {
                     .orderId(ORDER_ID)
                     .shippingAddress("123 Main St")
                     .status(ShipmentStatus.CREATED)
-                    .createdAt(Instant.now())
+                    .createdAt(Instant.parse("2026-01-01T00:00:00Z"))
                     .build();
             when(shipmentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
 
