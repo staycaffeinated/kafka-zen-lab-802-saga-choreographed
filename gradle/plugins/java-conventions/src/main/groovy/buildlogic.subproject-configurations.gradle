@@ -1,7 +1,12 @@
 subprojects {
     sonarqube {
         properties {
-            property "sonar.sources", "src/main"
+            def mainDir = new File(projectDir, "src/main")
+            if (!mainDir.exists()) {
+                skipProject = true
+            } else {
+                property "sonar.sources", "src/main"
+            }
             def testDirs = ["src/test", "src/integrationTest"].findAll {
                 new File(projectDir, it).exists() }
             if (!testDirs.isEmpty()) {
