@@ -27,6 +27,11 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
     public void handleOrderPlaced(String orderId, List<OrderedItem> items, BigDecimal amount, String shippingAddress) {
         log.info("===> Handling placed order: orderId: {}", orderId);
 
+        if (reservationDataStore.findByOrderId(orderId).isPresent()) {
+            log.warn("Duplicate ORDER_PLACED event — reservation already exists: orderId={}", orderId);
+            return;
+        }
+
         var exceeded =
                 items.stream().filter(i -> i.quantity() > MAX_QUANTITY_PER_ITEM).findFirst();
         if (exceeded.isPresent()) {

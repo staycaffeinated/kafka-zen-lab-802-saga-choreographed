@@ -57,6 +57,24 @@ class PaymentEventServiceTest {
         }
 
         @Test
+        @DisplayName("should skip save and publish when payment already exists (idempotent duplicate)")
+        void shouldSkipSaveAndPublish_whenPaymentAlreadyExists() {
+            var existing = Payment.builder()
+                    .orderId(ORDER_ID)
+                    .amount(BigDecimal.valueOf(50))
+                    .status(PaymentStatus.PROCESSED)
+                    .processedAt(Instant.now())
+                    .build();
+            when(paymentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handleInventoryReserved(ORDER_ID, BigDecimal.valueOf(50), SHIPPING_ADDRESS);
+
+            verify(paymentDataStore, never()).save(any());
+            verify(eventPublisher, never()).publishPaymentProcessed(any(), any());
+            verify(eventPublisher, never()).publishPaymentFailed(any(), any());
+        }
+
+        @Test
         @DisplayName("should NOT save and publish PAYMENT_FAILED when amount exceeds 10000")
         void shouldFailAndPublish_whenAmountExceedsLimit() {
             service.handleInventoryReserved(ORDER_ID, BigDecimal.valueOf(10_001), SHIPPING_ADDRESS);

@@ -97,6 +97,28 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     }
 
     @Test
+    @DisplayName("duplicate INVENTORY_RESERVED event is idempotent — one payment, no new outbox row")
+    void inventoryReserved_duplicate_isIdempotent() {
+        var orderId = "order-" + UUID.randomUUID();
+
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(paymentRepository.findByOrderId(orderId))
+                .isPresent());
+        outboxRepository.deleteAll();
+
+        kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
+
+        await().during(2, SECONDS).atMost(4, SECONDS).until(() -> outboxRepository.findAll().stream()
+                .filter(r -> r.getAggregateId().equals(orderId))
+                .toList()
+                .isEmpty());
+        assertThat(paymentRepository.findAll().stream()
+                        .filter(p -> p.getOrderId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("SHIPMENT_FAILED event refunds payment and writes PAYMENT_REFUNDED outbox row")
     void shipmentFailed_refundsPayment() {
         var orderId = "order-" + UUID.randomUUID();

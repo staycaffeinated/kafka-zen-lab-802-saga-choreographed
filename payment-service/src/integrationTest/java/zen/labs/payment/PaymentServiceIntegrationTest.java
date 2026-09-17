@@ -111,6 +111,26 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("handleInventoryReserved called twice with same orderId is idempotent — one payment, one outbox row")
+    void handleInventoryReserved_calledTwice_isIdempotent() {
+        var orderId = "order-" + UUID.randomUUID();
+        var amount = BigDecimal.valueOf(500);
+        var address = "123 Main St, Springfield, IL 62701";
+
+        eventUseCase.handleInventoryReserved(orderId, amount, address);
+        eventUseCase.handleInventoryReserved(orderId, amount, address);
+
+        assertThat(paymentRepository.findAll().stream()
+                        .filter(p -> p.getOrderId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+        assertThat(outboxRepository.findAll().stream()
+                        .filter(r -> r.getAggregateId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("handleShipmentFailed when payment exists refunds it and writes PAYMENT_REFUNDED outbox row")
     void handleShipmentFailed_withExistingPayment_refundsAndWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();

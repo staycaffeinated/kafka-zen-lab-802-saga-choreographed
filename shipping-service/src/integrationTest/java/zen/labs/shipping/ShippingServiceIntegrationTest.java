@@ -124,6 +124,25 @@ class ShippingServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("handlePaymentProcessed called twice with same orderId is idempotent — one shipment, one outbox row")
+    void handlePaymentProcessed_calledTwice_isIdempotent() {
+        var orderId = "order-" + UUID.randomUUID();
+        var address = "123 Main St, Springfield, IL 62701";
+
+        eventUseCase.handlePaymentProcessed(orderId, address);
+        eventUseCase.handlePaymentProcessed(orderId, address);
+
+        assertThat(shipmentRepository.findAll().stream()
+                        .filter(s -> s.getOrderId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+        assertThat(outboxRepository.findAll().stream()
+                        .filter(r -> r.getAggregateId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("handleOrderCancellationRequested when shipment exists transitions it to CANCELLED")
     void handleOrderCancellationRequested_withExistingShipment_cancelsShipment() {
         var orderId = "order-" + UUID.randomUUID();

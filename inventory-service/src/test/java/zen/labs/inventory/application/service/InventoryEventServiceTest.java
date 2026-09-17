@@ -62,6 +62,23 @@ class InventoryEventServiceTest {
         }
 
         @Test
+        @DisplayName("should skip save and publish when reservation already exists (idempotent duplicate)")
+        void shouldSkipSaveAndPublish_whenReservationAlreadyExists() {
+            var existing = InventoryReservation.builder()
+                    .orderId(ORDER_ID)
+                    .status(ReservationStatus.RESERVED)
+                    .reservedAt(Instant.now())
+                    .build();
+            when(reservationDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handleOrderPlaced(ORDER_ID, List.of(new OrderedItem("prod-A", 1)), AMOUNT, SHIPPING_ADDRESS);
+
+            verify(reservationDataStore, never()).save(any());
+            verify(eventPublisher, never()).publishInventoryReserved(any(), any(), any());
+            verify(eventPublisher, never()).publishInventoryReservationFailed(any(), any());
+        }
+
+        @Test
         @DisplayName("should NOT save and publish INVENTORY_RESERVATION_FAILED when any item exceeds 100")
         void shouldFailAndPublish_whenItemExceedsLimit() {
             var items = List.of(new OrderedItem("prod-X", 101));

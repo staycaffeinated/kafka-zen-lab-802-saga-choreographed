@@ -96,6 +96,29 @@ class ShippingEventListenerIntegrationTest extends AbstractPostgresIntegrationTe
     }
 
     @Test
+    @DisplayName("duplicate PAYMENT_PROCESSED event is idempotent — one shipment, no new outbox row")
+    void paymentProcessed_duplicate_isIdempotent() {
+        var orderId = "order-" + UUID.randomUUID();
+        var address = "123 Main St, Springfield, IL 62701";
+
+        kafkaTemplate.send(paymentEventsTopic, orderId, paymentProcessedJson(orderId, address));
+        await().atMost(10, SECONDS).untilAsserted(() -> assertThat(shipmentRepository.findByOrderId(orderId))
+                .isPresent());
+        outboxRepository.deleteAll();
+
+        kafkaTemplate.send(paymentEventsTopic, orderId, paymentProcessedJson(orderId, address));
+
+        await().during(2, SECONDS).atMost(4, SECONDS).until(() -> outboxRepository.findAll().stream()
+                .filter(r -> r.getAggregateId().equals(orderId))
+                .toList()
+                .isEmpty());
+        assertThat(shipmentRepository.findAll().stream()
+                        .filter(s -> s.getOrderId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("ORDER_CANCELLATION_REQUESTED event cancels shipment silently — no outbox row")
     void orderCancellationRequested_cancelsShipmentSilently() {
         var orderId = "order-" + UUID.randomUUID();

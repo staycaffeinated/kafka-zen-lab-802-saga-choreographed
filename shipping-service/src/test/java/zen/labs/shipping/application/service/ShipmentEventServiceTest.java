@@ -57,6 +57,24 @@ class ShipmentEventServiceTest {
         }
 
         @Test
+        @DisplayName("should skip save and publish when shipment already exists (idempotent duplicate)")
+        void shouldSkipSaveAndPublish_whenShipmentAlreadyExists() {
+            var existing = Shipment.builder()
+                    .orderId(ORDER_ID)
+                    .shippingAddress("123 Main St")
+                    .status(ShipmentStatus.CREATED)
+                    .createdAt(Instant.now())
+                    .build();
+            when(shipmentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handlePaymentProcessed(ORDER_ID, "123 Main St");
+
+            verify(shipmentDataStore, never()).save(any());
+            verify(eventPublisher, never()).publishShipmentCreated(any());
+            verify(eventPublisher, never()).publishShipmentFailed(any(), any());
+        }
+
+        @Test
         @DisplayName("should NOT save and publish SHIPMENT_FAILED when address exceeds limit")
         void shouldFailAndPublish_whenAddressTooLong() {
             String longAddress = "A".repeat(MAX_ADDRESS_LENGTH + 1);

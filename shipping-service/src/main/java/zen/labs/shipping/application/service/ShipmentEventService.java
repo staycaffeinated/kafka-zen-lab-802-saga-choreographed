@@ -27,6 +27,10 @@ public class ShipmentEventService implements HandleShipmentEventUseCase {
     @Override
     @Transactional
     public void handlePaymentProcessed(String orderId, String shippingAddress) {
+        if (shipmentDataStore.findByOrderId(orderId).isPresent()) {
+            log.warn("Duplicate PAYMENT_PROCESSED event — shipment already exists: orderId={}", orderId);
+            return;
+        }
         if (shippingAddress == null || shippingAddress.isBlank()) {
             log.warn("Shipment failed — address missing: orderId={}", orderId);
             eventPublisher.publishShipmentFailed(orderId, "Shipping address is required");

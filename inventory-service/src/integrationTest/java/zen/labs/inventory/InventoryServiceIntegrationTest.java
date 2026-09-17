@@ -142,6 +142,27 @@ class InventoryServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("handleOrderPlaced called twice with same orderId is idempotent — one reservation, one outbox row")
+    void handleOrderPlaced_calledTwice_isIdempotent() {
+        var orderId = "order-" + UUID.randomUUID();
+        var items = List.of(new OrderedItem("product-1", 5));
+        var amount = BigDecimal.valueOf(500);
+        var address = "123 Main St, Springfield, IL 62701";
+
+        eventUseCase.handleOrderPlaced(orderId, items, amount, address);
+        eventUseCase.handleOrderPlaced(orderId, items, amount, address);
+
+        assertThat(reservationRepository.findAll().stream()
+                        .filter(r -> r.getOrderId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+        assertThat(outboxRepository.findAll().stream()
+                        .filter(r -> r.getAggregateId().equals(orderId))
+                        .toList())
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("handleRelease when no reservation still writes INVENTORY_RELEASED outbox row")
     void handleRelease_withNoReservation_stillWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();

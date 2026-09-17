@@ -28,6 +28,10 @@ public class PaymentEventService implements HandlePaymentEventUseCase {
     @Override
     @Transactional
     public void handleInventoryReserved(String orderId, BigDecimal amount, String shippingAddress) {
+        if (paymentDataStore.findByOrderId(orderId).isPresent()) {
+            log.warn("Duplicate INVENTORY_RESERVED event — payment already exists: orderId={}", orderId);
+            return;
+        }
         if (amount.compareTo(MAX_AMOUNT) > 0) {
             log.warn("Payment failed: orderId={} amount={}", orderId, amount);
             eventPublisher.publishPaymentFailed(orderId, "Amount exceeds maximum allowed: " + amount);
