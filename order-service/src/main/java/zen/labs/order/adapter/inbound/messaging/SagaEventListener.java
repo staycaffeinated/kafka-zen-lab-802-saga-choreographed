@@ -32,8 +32,8 @@ public class SagaEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            MDC.put("eventType", event.type().name());
-            log.debug("Received saga event: type={} orderId={}", event.type(), event.orderId());
+            log.debug(
+                    "Received saga event: type={} orderId={}", event.getClass().getSimpleName(), event.orderId());
             dispatch(event);
             ack.acknowledge();
         } finally {
@@ -42,11 +42,11 @@ public class SagaEventListener {
     }
 
     private void dispatch(SagaEvent event) {
-        switch (event.type()) {
-            case INVENTORY_RESERVATION_FAILED -> eventHandler.onInventoryReservationFailed(event.orderId());
-            case INVENTORY_RELEASED -> eventHandler.onInventoryReleased(event.orderId());
-            case SHIPMENT_CREATED -> eventHandler.onShipmentCreated(event.orderId());
-            default -> log.debug("Ignoring event type: {}", event.type());
+        switch (event) {
+            case SagaEvent.InventoryReservationFailedEvent e -> eventHandler.onInventoryReservationFailed(e.orderId());
+            case SagaEvent.InventoryReleasedEvent e -> eventHandler.onInventoryReleased(e.orderId());
+            case SagaEvent.ShipmentCreatedEvent e -> eventHandler.onShipmentCreated(e.orderId());
+            default -> log.debug("Ignoring event type: {}", event.getClass().getSimpleName());
         }
     }
 }

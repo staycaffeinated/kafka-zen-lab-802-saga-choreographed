@@ -35,14 +35,7 @@ public class InventoryEventPublisherAdapter implements InventoryEventPublisher {
         persist(
                 orderId,
                 SagaEventType.INVENTORY_RESERVED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RESERVED,
-                        orderId,
-                        null,
-                        null,
-                        amount,
-                        shippingAddress));
+                new SagaEvent.InventoryReservedEvent(UUID.randomUUID().toString(), orderId, amount, shippingAddress));
     }
 
     @Override
@@ -50,14 +43,7 @@ public class InventoryEventPublisherAdapter implements InventoryEventPublisher {
         persist(
                 orderId,
                 SagaEventType.INVENTORY_RESERVATION_FAILED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RESERVATION_FAILED,
-                        orderId,
-                        reason,
-                        null,
-                        null,
-                        null));
+                new SagaEvent.InventoryReservationFailedEvent(UUID.randomUUID().toString(), orderId, reason));
     }
 
     @Override
@@ -65,14 +51,7 @@ public class InventoryEventPublisherAdapter implements InventoryEventPublisher {
         persist(
                 orderId,
                 SagaEventType.INVENTORY_RELEASED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.INVENTORY_RELEASED,
-                        orderId,
-                        null,
-                        null,
-                        null,
-                        null));
+                new SagaEvent.InventoryReleasedEvent(UUID.randomUUID().toString(), orderId));
     }
 
     private void persist(String orderId, SagaEventType type, SagaEvent event) {

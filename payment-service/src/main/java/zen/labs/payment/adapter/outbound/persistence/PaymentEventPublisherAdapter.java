@@ -34,14 +34,7 @@ public class PaymentEventPublisherAdapter implements PaymentEventPublisher {
         persist(
                 orderId,
                 SagaEventType.PAYMENT_PROCESSED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.PAYMENT_PROCESSED,
-                        orderId,
-                        null,
-                        null,
-                        null,
-                        shippingAddress));
+                new SagaEvent.PaymentProcessedEvent(UUID.randomUUID().toString(), orderId, shippingAddress));
     }
 
     @Override
@@ -49,8 +42,7 @@ public class PaymentEventPublisherAdapter implements PaymentEventPublisher {
         persist(
                 orderId,
                 SagaEventType.PAYMENT_FAILED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(), SagaEventType.PAYMENT_FAILED, orderId, reason, null, null, null));
+                new SagaEvent.PaymentFailedEvent(UUID.randomUUID().toString(), orderId, reason));
     }
 
     @Override
@@ -58,8 +50,7 @@ public class PaymentEventPublisherAdapter implements PaymentEventPublisher {
         persist(
                 orderId,
                 SagaEventType.PAYMENT_REFUNDED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(), SagaEventType.PAYMENT_REFUNDED, orderId, null, null, null, null));
+                new SagaEvent.PaymentRefundedEvent(UUID.randomUUID().toString(), orderId));
     }
 
     private void persist(String orderId, SagaEventType type, SagaEvent event) {

@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.shipping.application.port.inbound.HandleShipmentEventUseCase;
 
 @Component
@@ -33,10 +32,10 @@ public class OrderEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event.type() == SagaEventType.ORDER_CANCELLATION_REQUESTED) {
-                eventUseCase.handleOrderCancellationRequested(event.orderId());
+            if (event instanceof SagaEvent.OrderCancellationRequestedEvent e) {
+                eventUseCase.handleOrderCancellationRequested(e.orderId());
             } else {
-                log.debug("Ignoring order event: {}", event.type());
+                log.debug("Ignoring order event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

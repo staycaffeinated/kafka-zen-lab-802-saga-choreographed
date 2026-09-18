@@ -30,15 +30,16 @@ public class OrderEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            switch (event.type()) {
-                case ORDER_PLACED -> {
-                    var items = event.items().stream()
+            switch (event) {
+                case SagaEvent.OrderPlacedEvent e -> {
+                    var items = e.items().stream()
                             .map(i -> new OrderedItem(i.productId(), i.quantity()))
                             .toList();
-                    eventUseCase.handleOrderPlaced(event.orderId(), items, event.amount(), event.shippingAddress());
+                    eventUseCase.handleOrderPlaced(e.orderId(), items, e.amount(), e.shippingAddress());
                 }
-                case ORDER_CANCELLATION_REQUESTED -> eventUseCase.handleRelease(event.orderId());
-                default -> log.debug("Ignoring order event: {}", event.type());
+                case SagaEvent.OrderCancellationRequestedEvent e -> eventUseCase.handleRelease(e.orderId());
+                default ->
+                    log.debug("Ignoring order event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.math.BigDecimal;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.payment.application.port.inbound.HandlePaymentEventUseCase;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,14 +41,6 @@ class InventoryEventListenerTest {
     private static final String PAYLOAD = "{}";
     private static final BigDecimal AMOUNT = new BigDecimal("150.00");
 
-    private SagaEvent eventOf(SagaEventType type) {
-        return new SagaEvent("evt-1", type, ORDER_ID, null, List.of(), AMOUNT, ADDRESS);
-    }
-
-    /* ---------------------------------------------------------------------------------
-     * dispatch
-     * --------------------------------------------------------------------------------- */
-
     @Nested
     @DisplayName("dispatch")
     class Dispatch {
@@ -58,7 +48,9 @@ class InventoryEventListenerTest {
         @Test
         @DisplayName("should call handleInventoryReserved for INVENTORY_RESERVED")
         void shouldHandleInventoryReserved() throws Exception {
-            doReturn(eventOf(SagaEventType.INVENTORY_RESERVED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.InventoryReservedEvent("evt-1", ORDER_ID, AMOUNT, ADDRESS))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 
@@ -69,7 +61,7 @@ class InventoryEventListenerTest {
         @Test
         @DisplayName("should not call use case for unrelated event type")
         void shouldIgnoreUnrelatedEventType() throws Exception {
-            doReturn(eventOf(SagaEventType.INVENTORY_RESERVATION_FAILED))
+            doReturn(new SagaEvent.InventoryReservationFailedEvent("evt-1", ORDER_ID, "out of stock"))
                     .when(jsonMapper)
                     .readValue(PAYLOAD, SagaEvent.class);
 
@@ -79,10 +71,6 @@ class InventoryEventListenerTest {
             verify(ack).acknowledge();
         }
     }
-
-    /* ---------------------------------------------------------------------------------
-     * error handling
-     * --------------------------------------------------------------------------------- */
 
     @Nested
     @DisplayName("error handling")

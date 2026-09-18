@@ -7,8 +7,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import java.math.BigDecimal;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.payment.application.port.inbound.HandlePaymentEventUseCase;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,14 +38,6 @@ class ShippingEventListenerTest {
     private static final String ORDER_ID = "order-001";
     private static final String PAYLOAD = "{}";
 
-    private SagaEvent eventOf(SagaEventType type) {
-        return new SagaEvent("evt-1", type, ORDER_ID, null, List.of(), BigDecimal.TEN, "123 Main St");
-    }
-
-    /* ---------------------------------------------------------------------------------
-     * dispatch
-     * --------------------------------------------------------------------------------- */
-
     @Nested
     @DisplayName("dispatch")
     class Dispatch {
@@ -56,7 +45,9 @@ class ShippingEventListenerTest {
         @Test
         @DisplayName("should call handleShipmentFailed for SHIPMENT_FAILED")
         void shouldHandleShipmentFailed() throws Exception {
-            doReturn(eventOf(SagaEventType.SHIPMENT_FAILED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.ShipmentFailedEvent("evt-1", ORDER_ID, "address invalid"))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 
@@ -67,7 +58,9 @@ class ShippingEventListenerTest {
         @Test
         @DisplayName("should not call use case for unrelated event type")
         void shouldIgnoreUnrelatedEventType() throws Exception {
-            doReturn(eventOf(SagaEventType.SHIPMENT_CREATED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.ShipmentCreatedEvent("evt-1", ORDER_ID))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 
@@ -75,10 +68,6 @@ class ShippingEventListenerTest {
             verify(ack).acknowledge();
         }
     }
-
-    /* ---------------------------------------------------------------------------------
-     * error handling
-     * --------------------------------------------------------------------------------- */
 
     @Nested
     @DisplayName("error handling")

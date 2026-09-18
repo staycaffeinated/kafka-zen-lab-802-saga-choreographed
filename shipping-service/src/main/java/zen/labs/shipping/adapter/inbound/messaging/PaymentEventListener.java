@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.shipping.application.port.inbound.HandleShipmentEventUseCase;
 
 @Component
@@ -33,10 +32,10 @@ public class PaymentEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event.type() == SagaEventType.PAYMENT_PROCESSED) {
-                eventUseCase.handlePaymentProcessed(event.orderId(), event.shippingAddress());
+            if (event instanceof SagaEvent.PaymentProcessedEvent e) {
+                eventUseCase.handlePaymentProcessed(e.orderId(), e.shippingAddress());
             } else {
-                log.debug("Ignoring payment event: {}", event.type());
+                log.debug("Ignoring payment event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

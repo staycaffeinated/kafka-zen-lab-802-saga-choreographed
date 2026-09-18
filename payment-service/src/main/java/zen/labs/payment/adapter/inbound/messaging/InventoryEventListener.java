@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.payment.application.port.inbound.HandlePaymentEventUseCase;
 
 @Component
@@ -34,11 +33,11 @@ public class InventoryEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event.type() == SagaEventType.INVENTORY_RESERVED) {
-                log.info("===> Inventory reservation event received; orderId={}", event.orderId());
-                eventUseCase.handleInventoryReserved(event.orderId(), event.amount(), event.shippingAddress());
+            if (event instanceof SagaEvent.InventoryReservedEvent e) {
+                log.info("===> Inventory reservation event received; orderId={}", e.orderId());
+                eventUseCase.handleInventoryReserved(e.orderId(), e.amount(), e.shippingAddress());
             } else {
-                log.info("===> Ignoring inventory event: {}", event.type());
+                log.info("===> Ignoring inventory event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

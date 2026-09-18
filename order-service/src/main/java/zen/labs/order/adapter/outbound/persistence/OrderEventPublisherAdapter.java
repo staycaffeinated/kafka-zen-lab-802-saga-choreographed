@@ -35,11 +35,9 @@ public class OrderEventPublisherAdapter implements OrderEventPublisher {
 
     @Override
     public void publishOrderPlaced(String orderId, List<OrderItem> items, BigDecimal amount, String shippingAddress) {
-        var event = new SagaEvent(
+        var event = new SagaEvent.OrderPlacedEvent(
                 UUID.randomUUID().toString(),
-                SagaEventType.ORDER_PLACED,
                 orderId,
-                null,
                 items.stream()
                         .map(i -> new SagaEventItem(i.productId(), i.quantity()))
                         .toList(),
@@ -50,14 +48,8 @@ public class OrderEventPublisherAdapter implements OrderEventPublisher {
 
     @Override
     public void publishCancellationRequested(String orderId) {
-        var event = new SagaEvent(
-                UUID.randomUUID().toString(),
-                SagaEventType.ORDER_CANCELLATION_REQUESTED,
-                orderId,
-                null,
-                null,
-                null,
-                null);
+        var event =
+                new SagaEvent.OrderCancellationRequestedEvent(UUID.randomUUID().toString(), orderId);
         persist(orderId, SagaEventType.ORDER_CANCELLATION_REQUESTED, event);
     }
 

@@ -38,8 +38,7 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
         persist(
                 orderId,
                 SagaEventType.SHIPMENT_CREATED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(), SagaEventType.SHIPMENT_CREATED, orderId, null, null, null, null));
+                new SagaEvent.ShipmentCreatedEvent(UUID.randomUUID().toString(), orderId));
     }
 
     @Override
@@ -48,14 +47,7 @@ public class ShippingEventPublisherAdapter implements ShippingEventPublisher {
         persist(
                 orderId,
                 SagaEventType.SHIPMENT_FAILED,
-                new SagaEvent(
-                        UUID.randomUUID().toString(),
-                        SagaEventType.SHIPMENT_FAILED,
-                        orderId,
-                        reason,
-                        null,
-                        null,
-                        null));
+                new SagaEvent.ShipmentFailedEvent(UUID.randomUUID().toString(), orderId, reason));
     }
 
     private void persist(String orderId, SagaEventType type, SagaEvent event) {

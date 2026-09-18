@@ -7,8 +7,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import java.math.BigDecimal;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
 import zen.labs.order.application.port.inbound.HandleSagaEventUseCase;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,10 +38,6 @@ class SagaEventListenerTest {
     private static final String ORDER_ID = "order-001";
     private static final String PAYLOAD = "{}";
 
-    private SagaEvent eventOf(SagaEventType type) {
-        return new SagaEvent("evt-1", type, ORDER_ID, null, List.of(), BigDecimal.TEN, "123 Main St");
-    }
-
     /* ---------------------------------------------------------------------------------
      * dispatch
      * --------------------------------------------------------------------------------- */
@@ -56,7 +49,7 @@ class SagaEventListenerTest {
         @Test
         @DisplayName("should call onInventoryReservationFailed for INVENTORY_RESERVATION_FAILED")
         void shouldHandleInventoryReservationFailed() throws Exception {
-            doReturn(eventOf(SagaEventType.INVENTORY_RESERVATION_FAILED))
+            doReturn(new SagaEvent.InventoryReservationFailedEvent("evt-1", ORDER_ID, "out of stock"))
                     .when(jsonMapper)
                     .readValue(PAYLOAD, SagaEvent.class);
 
@@ -69,7 +62,9 @@ class SagaEventListenerTest {
         @Test
         @DisplayName("should call onInventoryReleased for INVENTORY_RELEASED")
         void shouldHandleInventoryReleased() throws Exception {
-            doReturn(eventOf(SagaEventType.INVENTORY_RELEASED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.InventoryReleasedEvent("evt-1", ORDER_ID))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 
@@ -80,7 +75,9 @@ class SagaEventListenerTest {
         @Test
         @DisplayName("should call onShipmentCreated for SHIPMENT_CREATED")
         void shouldHandleShipmentCreated() throws Exception {
-            doReturn(eventOf(SagaEventType.SHIPMENT_CREATED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.ShipmentCreatedEvent("evt-1", ORDER_ID))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 
@@ -91,7 +88,9 @@ class SagaEventListenerTest {
         @Test
         @DisplayName("should not call handler for unrelated event type")
         void shouldIgnoreUnrelatedEventType() throws Exception {
-            doReturn(eventOf(SagaEventType.ORDER_PLACED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.PaymentRefundedEvent("evt-1", ORDER_ID))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 

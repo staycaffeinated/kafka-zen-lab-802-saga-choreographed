@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.support.Acknowledgment;
 import tools.jackson.databind.json.JsonMapper;
 import zen.labs.adapters.common.kafka.SagaEvent;
-import zen.labs.adapters.common.kafka.SagaEventType;
+import zen.labs.adapters.common.kafka.SagaEventItem;
 import zen.labs.inventory.application.port.inbound.HandleInventoryEventUseCase;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,10 +45,6 @@ class OrderEventListenerTest {
     private static final String PAYLOAD = "{}";
     private static final BigDecimal AMOUNT = new BigDecimal("99.99");
 
-    private SagaEvent eventOf(SagaEventType type) {
-        return new SagaEvent("evt-1", type, ORDER_ID, null, List.of(), AMOUNT, ADDRESS);
-    }
-
     /* ---------------------------------------------------------------------------------
      * dispatch
      * --------------------------------------------------------------------------------- */
@@ -60,7 +56,8 @@ class OrderEventListenerTest {
         @Test
         @DisplayName("should call handleOrderPlaced for ORDER_PLACED")
         void shouldHandleOrderPlaced() throws Exception {
-            var event = eventOf(SagaEventType.ORDER_PLACED);
+            var event = new SagaEvent.OrderPlacedEvent(
+                    "evt-1", ORDER_ID, List.of(new SagaEventItem("p1", 2)), AMOUNT, ADDRESS);
             doReturn(event).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
@@ -72,7 +69,7 @@ class OrderEventListenerTest {
         @Test
         @DisplayName("should call handleRelease for ORDER_CANCELLATION_REQUESTED")
         void shouldHandleOrderCancellationRequested() throws Exception {
-            doReturn(eventOf(SagaEventType.ORDER_CANCELLATION_REQUESTED))
+            doReturn(new SagaEvent.OrderCancellationRequestedEvent("evt-1", ORDER_ID))
                     .when(jsonMapper)
                     .readValue(PAYLOAD, SagaEvent.class);
 
@@ -85,7 +82,9 @@ class OrderEventListenerTest {
         @Test
         @DisplayName("should not call use case for unrelated event type")
         void shouldIgnoreUnrelatedEventType() throws Exception {
-            doReturn(eventOf(SagaEventType.PAYMENT_PROCESSED)).when(jsonMapper).readValue(PAYLOAD, SagaEvent.class);
+            doReturn(new SagaEvent.PaymentProcessedEvent("evt-1", ORDER_ID, ADDRESS))
+                    .when(jsonMapper)
+                    .readValue(PAYLOAD, SagaEvent.class);
 
             listener.onEvent(PAYLOAD, ack);
 

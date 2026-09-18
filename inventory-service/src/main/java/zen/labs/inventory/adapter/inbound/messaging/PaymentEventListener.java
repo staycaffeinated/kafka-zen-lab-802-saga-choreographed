@@ -29,9 +29,11 @@ public class PaymentEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            switch (event.type()) {
-                case PAYMENT_FAILED, PAYMENT_REFUNDED -> eventUseCase.handleRelease(event.orderId());
-                default -> log.debug("Ignoring payment event: {}", event.type());
+            switch (event) {
+                case SagaEvent.PaymentFailedEvent e -> eventUseCase.handleRelease(e.orderId());
+                case SagaEvent.PaymentRefundedEvent e -> eventUseCase.handleRelease(e.orderId());
+                default ->
+                    log.debug("Ignoring payment event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {
