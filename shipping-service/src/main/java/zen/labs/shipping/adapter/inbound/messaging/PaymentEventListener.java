@@ -32,10 +32,11 @@ public class PaymentEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event instanceof SagaEvent.PaymentProcessedEvent e) {
-                eventUseCase.handlePaymentProcessed(e.orderId(), e.shippingAddress());
-            } else {
-                log.debug("Ignoring payment event: {}", event.getClass().getSimpleName());
+            switch (event) {
+                case SagaEvent.PaymentProcessedEvent e ->
+                    eventUseCase.handlePaymentProcessed(e.orderId(), e.shippingAddress());
+                default ->
+                    log.debug("Ignoring payment event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

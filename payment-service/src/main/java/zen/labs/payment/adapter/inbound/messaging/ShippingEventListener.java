@@ -33,11 +33,13 @@ public class ShippingEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event instanceof SagaEvent.ShipmentFailedEvent e) {
-                log.info("===> Shipment failed; orderId: {}", e.orderId());
-                eventUseCase.handleShipmentFailed(e.orderId());
-            } else {
-                log.debug("Ignoring shipping event: {}", event.getClass().getSimpleName());
+            switch (event) {
+                case SagaEvent.ShipmentFailedEvent e -> {
+                    log.info("===> Shipment failed; orderId: {}", e.orderId());
+                    eventUseCase.handleShipmentFailed(e.orderId());
+                }
+                default ->
+                    log.debug("Ignoring shipping event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

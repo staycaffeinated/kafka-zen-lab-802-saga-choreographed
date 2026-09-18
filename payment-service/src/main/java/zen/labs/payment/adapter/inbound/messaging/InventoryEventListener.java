@@ -33,11 +33,13 @@ public class InventoryEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event instanceof SagaEvent.InventoryReservedEvent e) {
-                log.info("===> Inventory reservation event received; orderId={}", e.orderId());
-                eventUseCase.handleInventoryReserved(e.orderId(), e.amount(), e.shippingAddress());
-            } else {
-                log.info("===> Ignoring inventory event: {}", event.getClass().getSimpleName());
+            switch (event) {
+                case SagaEvent.InventoryReservedEvent e -> {
+                    log.info("===> Inventory reservation event received; orderId={}", e.orderId());
+                    eventUseCase.handleInventoryReserved(e.orderId(), e.amount(), e.shippingAddress());
+                }
+                default ->
+                    log.debug("Ignoring inventory event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {

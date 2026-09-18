@@ -33,11 +33,13 @@ public class OrderEventListener {
         try {
             var event = jsonMapper.readValue(payload, SagaEvent.class);
             MDC.put("orderId", event.orderId());
-            if (event instanceof SagaEvent.OrderCancellationRequestedEvent e) {
-                log.info("===> Order cancellation requested for orderId={}", e.orderId());
-                eventUseCase.handleOrderCancellationRequested(e.orderId());
-            } else {
-                log.debug("Ignoring order event: {}", event.getClass().getSimpleName());
+            switch (event) {
+                case SagaEvent.OrderCancellationRequestedEvent e -> {
+                    log.info("===> Order cancellation requested for orderId={}", e.orderId());
+                    eventUseCase.handleOrderCancellationRequested(e.orderId());
+                }
+                default ->
+                    log.debug("Ignoring order event: {}", event.getClass().getSimpleName());
             }
             ack.acknowledge();
         } finally {
