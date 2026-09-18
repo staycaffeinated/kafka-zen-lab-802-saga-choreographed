@@ -106,6 +106,7 @@ startup by the `connector-registrar` container. Example — `order-outbox-connec
 {
   "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
   "table.include.list": "order_service.outbox",
+  "publication.autocreate.mode": "filtered",
   "transforms": "outbox",
   "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
   "transforms.outbox.route.by.field": "aggregate_type",
@@ -271,17 +272,33 @@ sequenceDiagram
     participant Debezium
     participant Kafka
     participant InvSvc as inventory-service
+    participant DB_I as inventory_service DB + outbox
     participant PaySvc as payment-service
+    participant DB_P as payment_service DB + outbox
     participant ShipSvc as shipping-service
 
     Client->>OrderSvc: POST /api/v1/orders/{id}/cancel
     OrderSvc->>DB_O: outbox(ORDER_CANCELLATION_REQUESTED) [atomic]
     DB_O->>Debezium: WAL stream
     Debezium->>Kafka: ORDER_CANCELLATION_REQUESTED → order.events
-    Kafka->>InvSvc: ORDER_CANCELLATION_REQUESTED → release inventory → INVENTORY_RELEASED
-    Kafka->>PaySvc: ORDER_CANCELLATION_REQUESTED → refund payment if exists
-    Kafka->>ShipSvc: ORDER_CANCELLATION_REQUESTED → handle cancellation
-    Note over OrderSvc: receives INVENTORY_RELEASED → UPDATE order → CANCELLED
+
+    Note over InvSvc,ShipSvc: All three react concurrently
+    Kafka->>InvSvc: ORDER_CANCELLATION_REQUESTED
+    InvSvc->>DB_I: UPDATE reservation → RELEASED + outbox(INVENTORY_RELEASED) [atomic]
+    DB_I->>Debezium: WAL stream
+    Debezium->>Kafka: INVENTORY_RELEASED → inventory.events
+
+    Kafka->>PaySvc: ORDER_CANCELLATION_REQUESTED
+    PaySvc->>DB_P: UPDATE payment → REFUNDED + outbox(PAYMENT_REFUNDED) [atomic]
+    DB_P->>Debezium: WAL stream
+    Debezium->>Kafka: PAYMENT_REFUNDED → payment.events
+
+    Kafka->>ShipSvc: ORDER_CANCELLATION_REQUESTED
+    Note over ShipSvc: no active shipment — no-op
+
+    Note over InvSvc: PAYMENT_REFUNDED also triggers release (idempotency guard prevents duplicate)
+    Kafka->>OrderSvc: INVENTORY_RELEASED
+    OrderSvc->>DB_O: UPDATE order → CANCELLED
 ```
 
 ---
@@ -508,7 +525,7 @@ zen.labs.shipping
 
 | Module | Key Classes |
 |---|---|
-| `common-adapter-components` | `SagaEvent` record, `SagaEventType` enum, `SagaEventItem` record, `KafkaTopics` constants, `GlobalExceptionHandler`, `CorrelationIdFilter`, `LoggingFilter`, `@Alphabetic`, `@ResourceId`, `@SearchText` validators |
+| `common-adapter-components` | `SagaEvent` sealed interface hierarchy, `SagaEventType` enum, `SagaEventItem` record, `GlobalExceptionHandler`, `CorrelationIdFilter`, `LoggingFilter`, `@Alphabetic`, `@ResourceId`, `@SearchText` validators |
 | `common-application-components` | `ApplicationException`, `BadRequestException`, `ResourceNotFoundException`, `UnprocessableRequestException`, `ResourceIdSupplier` port |
 | `common-domain-components` | `ResourceIdAware` marker interface, `ResourceIdFormat` regex constant |
 | `common-infra-components` | `JacksonConfiguration`, `DateTimeFormatConfiguration`, `LocalDateConverter`, `ResourceIdSupplierConfiguration` (Spring auto-configuration), `ResourceIdGenerator`, `SpringProfiles`, `SagaTopicsProperties` |
@@ -629,6 +646,64 @@ Each service has an `*ArchitectureTest.java` unit test that runs on every build.
 
 ---
 
+## Distributed Tracing
+
+All four services export OpenTelemetry traces via OTLP HTTP to Jaeger. Traces span service boundaries via
+W3C `traceparent` headers propagated automatically in Kafka messages.
+
+### Dependencies
+
+Each service includes:
+- `io.micrometer:micrometer-tracing-bridge-otel` — Micrometer → OTel bridge
+- `io.opentelemetry:opentelemetry-exporter-otlp` — OTLP exporter (runtime only)
+
+### Configuration (`application.yml`)
+
+```yaml
+spring:
+  kafka:
+    listener:
+      observation-enabled: true   # instruments @KafkaListener with Micrometer Observation
+    template:
+      observation-enabled: true   # instruments KafkaTemplate sends
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0            # 100% sampling — reduce in production
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+```
+
+### Docker Compose
+
+Jaeger (`jaegertracing/jaeger:2.21.0`) is included in all three compose variants. Each service container
+receives `OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces`. IDE-run services use the
+`localhost:4318` default from `application.yml`.
+
+| UI | URL |
+|---|---|
+| Jaeger trace explorer | `http://localhost:16686` |
+
+### What a Saga Trace Looks Like
+
+One HTTP request to `POST /api/v1/orders` produces a single trace containing spans across all four services,
+linked by the same trace ID propagated through Kafka headers:
+
+```
+[order-service: POST /orders]
+  └─ [order-service: produce → order.events]
+       └─ [inventory-service: consume ← order.events]
+            └─ [inventory-service: produce → inventory.events]
+                 └─ [payment-service: consume ← inventory.events]
+                      └─ [payment-service: produce → payment.events]
+                           └─ [shipping-service: consume ← payment.events]
+                                └─ [shipping-service: produce → shipping.events]
+```
+
+---
+
 ## MDC Logging
 
 All Kafka listeners inject structured fields into the SLF4J MDC on the listener thread, cleared in a `finally`
@@ -660,3 +735,5 @@ block after each record.
 | **Simulated participant failures** | Each service enforces a simple business rule for deterministic failures: inventory — quantity > 100; payment — amount > 10,000; shipment — address > 200 characters. This enables testing compensation flows without external systems. |
 | **Constructor injection only** | `@Autowired` field injection is banned by ArchUnit. Constructor injection makes dependencies explicit and simplifies testing without a Spring context. |
 | **`SagaTopicsProperties` in `common-infra-components`** | A single shared `@ConfigurationProperties` record eliminates four per-service copies. All services already depend on `common-infra-components`, and it has `spring-boot-autoconfigure` on its classpath. |
+| **Debezium `publication.autocreate.mode: filtered`** | Each connector's PostgreSQL publication covers only the table listed in `table.include.list` (e.g. `order_service.outbox`). `all_tables` would replicate WAL for every table in the shared database, wasting replication bandwidth and leaking schema information across service boundaries. |
+| **`PAYMENT_REFUNDED` published on manual cancellation** | When `ORDER_CANCELLATION_REQUESTED` arrives, `payment-service` refunds and publishes `PAYMENT_REFUNDED`. This ensures the event appears in the audit trail and allows any future consumer of the payment topic to observe the refund, regardless of how it was triggered. |

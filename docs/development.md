@@ -30,25 +30,36 @@ automatically via the Foojay Toolchain Resolver.
 
 ## Running the Infrastructure
 
-A single Docker Compose file is provided in the `docker/` directory. It starts PostgreSQL (with `wal_level=logical`),
-Kafka (Zookeeper mode), Debezium Kafka Connect, and a one-shot `connector-registrar` container that registers the
-four Debezium outbox connectors at startup.
+Three Docker Compose variants are provided in `docker/`. All start PostgreSQL (`wal_level=logical`),
+a Kafka broker, Debezium Kafka Connect, a `connector-registrar` that registers the four outbox connectors
+at startup, and Jaeger for distributed tracing.
+
+| File | Kafka broker | Use case |
+|---|---|---|
+| `docker-compose.redpanda.yml` | Redpanda | Default — fastest local dev |
+| `docker-compose.confluent.yml` | Confluent Kafka (KRaft) | Confluent-compatible testing |
+| `docker-compose.devmode.yml` | Confluent Kafka (KRaft) | Infrastructure only — run services from your IDE |
 
 ### Start infrastructure only (run services from your IDE)
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d postgres zookeeper kafka connect connector-registrar
+docker compose -f docker/docker-compose.devmode.yml up -d
 ```
 
-Wait for `connector-registrar` to exit (it runs once and terminates after posting the connector configs to the
-Connect REST API). Then start the services from your IDE or with `bootRun`.
+Wait for `connector-registrar` to exit (it runs once and terminates after posting the connector configs to
+the Connect REST API). Then start the services from your IDE or with `bootRun`. Jaeger is available at
+`http://localhost:16686` — IDE-run services export traces to `localhost:4318` by default.
 
 ### Start full stack (all services as Docker containers)
 
 Requires Docker images to be built first — see [Building Docker Images](#building-docker-images).
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+# Redpanda variant (recommended)
+docker compose -f docker/docker-compose.redpanda.yml up -d
+
+# Confluent variant
+docker compose -f docker/docker-compose.confluent.yml up -d
 ```
 
 ---
@@ -64,17 +75,18 @@ docker compose -f docker/docker-compose.yml up -d
 
 Default service ports:
 
-| Service | Local port | Docker Compose port |
+| Service | Local (`bootRun`) port | Docker Compose host port |
 |---|---|---|
-| order-service | 8080 | 8080 |
-| inventory-service | 8080 | 8081 |
-| payment-service | 8080 | 8082 |
-| shipping-service | 8080 | 8084 |
+| order-service | 8080 | 8085 |
+| inventory-service | 8080 | 8086 |
+| payment-service | 8080 | 8087 |
+| shipping-service | 8080 | 8088 |
 | kafka-connect | — | 8083 |
-| kafka | — | 9092 |
+| kafka (Redpanda external) | — | 19092 |
+| kafka (Confluent external) | — | 9092 |
 | postgres | — | 5432 |
-
-Note: shipping-service uses Docker Compose port 8084 (not 8083) to avoid conflict with kafka-connect.
+| Jaeger UI | — | 16686 |
+| Jaeger OTLP HTTP | — | 4318 |
 
 ---
 
@@ -153,7 +165,7 @@ kafka-zen-lab-802-saga-choreographed/       Root project
 │   └── src/main/java/zen/labs/adapters/common/
 │       ├── filters/                         CorrelationIdFilter, LoggingFilter
 │       ├── handlers/                        GlobalExceptionHandler
-│       ├── kafka/                           SagaEvent, SagaEventType, SagaEventItem, KafkaTopics
+│       ├── kafka/                           SagaEvent (sealed interface), SagaEventType, SagaEventItem
 │       └── validation/                      @Alphabetic, @ResourceId, @SearchText
 ├── common-application-components/
 │   └── src/main/java/zen/labs/application/common/
@@ -169,7 +181,9 @@ kafka-zen-lab-802-saga-choreographed/       Root project
 │       ├── profiles/                        SpringProfiles
 │       └── utils/                           ResourceIdGenerator
 ├── docker/
-│   ├── docker-compose.yml
+│   ├── docker-compose.redpanda.yml          Full stack — Redpanda broker
+│   ├── docker-compose.confluent.yml         Full stack — Confluent Kafka broker
+│   ├── docker-compose.devmode.yml           Infrastructure only — run services from IDE
 │   └── connectors/                          order-, inventory-, payment-, shipping-outbox-connector.json
 ├── order-service/
 │   └── src/
@@ -332,6 +346,33 @@ Spotless enforces Palantir Java Format. The check runs automatically as part of 
 
 ---
 
+## Observability
+
+### Distributed Tracing (Jaeger)
+
+Jaeger is included in all three Docker Compose variants. Access the UI at `http://localhost:16686`.
+
+To find a saga trace:
+1. Select a service (e.g. `order-service`) in the left panel → **Find Traces**
+2. Click a trace to see the full span waterfall across all four services
+3. Filter by tag `orderId=<value>` to isolate a specific order
+
+Sampling is set to `1.0` (100%) in `application.yml` — suitable for local dev. Lower for production:
+
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% in production
+```
+
+### MDC Logging
+
+All Kafka listeners inject `orderId` into the SLF4J MDC for the duration of each message, enabling
+log correlation without a tracing backend. MDC is cleared in a `finally` block after each record.
+
+---
+
 ## SonarQube Integration
 
 ```bash
@@ -360,3 +401,4 @@ root `build.gradle`. Each service module defines its own `sonar.projectKey` and 
 | `DB_PASSWORD` | `postgres` | PostgreSQL password |
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/postgres` | PostgreSQL JDBC URL |
 | `SPRING_KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Kafka broker address |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318/v1/traces` | Jaeger OTLP HTTP endpoint for trace export |
