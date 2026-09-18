@@ -72,6 +72,17 @@ class SagaEventHandlerTest {
 
             verify(orderDataStore, never()).update(any());
         }
+
+        @Test
+        @DisplayName("should skip when order already cancelled (idempotent duplicate)")
+        void shouldSkip_whenOrderAlreadyCancelled() {
+            when(orderDataStore.findByResourceId(ORDER_ID))
+                    .thenReturn(Optional.of(orderWithStatus(OrderStatus.CANCELLED)));
+
+            handler.onInventoryReservationFailed(ORDER_ID);
+
+            verify(orderDataStore, never()).update(any());
+        }
     }
 
     @Nested
@@ -122,6 +133,17 @@ class SagaEventHandlerTest {
 
             assertThatThrownBy(() -> handler.onInventoryReleased(ORDER_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(orderDataStore, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("should skip when order already cancelled (idempotent duplicate)")
+        void shouldSkip_whenOrderAlreadyCancelled() {
+            when(orderDataStore.findByResourceId(ORDER_ID))
+                    .thenReturn(Optional.of(orderWithStatus(OrderStatus.CANCELLED)));
+
+            handler.onInventoryReleased(ORDER_ID);
 
             verify(orderDataStore, never()).update(any());
         }

@@ -8,6 +8,7 @@ import zen.labs.application.common.exceptions.ResourceNotFoundException;
 import zen.labs.order.application.port.inbound.HandleSagaEventUseCase;
 import zen.labs.order.application.port.outbound.OrderDataStore;
 import zen.labs.order.domain.Order;
+import zen.labs.order.domain.OrderStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -18,14 +19,19 @@ public class SagaEventHandler implements HandleSagaEventUseCase {
 
     @Transactional
     public void onInventoryReservationFailed(String orderId) {
-        orderDataStore.update(requireOrder(orderId).cancel());
+        var order = requireOrder(orderId);
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            log.warn("Duplicate INVENTORY_RESERVATION_FAILED — order already cancelled: orderId={}", orderId);
+            return;
+        }
+        orderDataStore.update(order.cancel());
         log.info("Order CANCELLED (inventory failed): orderId={}", orderId);
     }
 
     @Transactional
     public void onInventoryReleased(String orderId) {
         var order = requireOrder(orderId);
-        if (!order.isConfirmed()) {
+        if (order.isConfirming() || order.getStatus() == OrderStatus.CANCELLING) {
             orderDataStore.update(order.cancel());
             log.info("Order CANCELLED (inventory released): orderId={}", orderId);
         }

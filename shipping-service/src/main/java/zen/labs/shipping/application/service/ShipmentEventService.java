@@ -56,13 +56,16 @@ public class ShipmentEventService implements HandleShipmentEventUseCase {
     @Override
     @Transactional
     public void handleOrderCancellationRequested(String orderId) {
-        shipmentDataStore
-                .findByOrderId(orderId)
-                .ifPresentOrElse(
-                        s -> {
-                            shipmentDataStore.update(s.withStatus(ShipmentStatus.CANCELLED));
-                            log.info("Shipment cancelled: orderId={}", orderId);
-                        },
-                        () -> log.debug("No shipment to cancel: orderId={}", orderId));
+        var shipment = shipmentDataStore.findByOrderId(orderId);
+        if (shipment.isEmpty()) {
+            log.debug("No shipment to cancel: orderId={}", orderId);
+            return;
+        }
+        if (shipment.get().getStatus() == ShipmentStatus.CANCELLED) {
+            log.warn("Duplicate ORDER_CANCELLATION_REQUESTED — shipment already cancelled: orderId={}", orderId);
+            return;
+        }
+        shipmentDataStore.update(shipment.get().withStatus(ShipmentStatus.CANCELLED));
+        log.info("Shipment cancelled: orderId={}", orderId);
     }
 }

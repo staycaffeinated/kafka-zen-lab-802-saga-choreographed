@@ -11,6 +11,7 @@ import zen.labs.inventory.application.port.inbound.OrderedItem;
 import zen.labs.inventory.application.port.outbound.InventoryEventPublisher;
 import zen.labs.inventory.application.port.outbound.InventoryReservationDataStore;
 import zen.labs.inventory.domain.InventoryReservation;
+import zen.labs.inventory.domain.ReservationStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -52,14 +53,18 @@ public class InventoryEventService implements HandleInventoryEventUseCase {
     @Override
     @Transactional
     public void handleRelease(String orderId) {
-        reservationDataStore
-                .findByOrderId(orderId)
-                .ifPresentOrElse(
-                        r -> {
-                            reservationDataStore.update(r.release());
-                            log.info("Inventory released: orderId={}", orderId);
-                        },
-                        () -> log.warn("No reservation to release: orderId={}", orderId));
+        var reservation = reservationDataStore.findByOrderId(orderId);
+        if (reservation.isEmpty()) {
+            log.warn("No reservation to release: orderId={}", orderId);
+            eventPublisher.publishInventoryReleased(orderId);
+            return;
+        }
+        if (reservation.get().getStatus() == ReservationStatus.RELEASED) {
+            log.warn("Duplicate release event — reservation already released: orderId={}", orderId);
+            return;
+        }
+        reservationDataStore.update(reservation.get().release());
+        log.info("Inventory released: orderId={}", orderId);
         eventPublisher.publishInventoryReleased(orderId);
     }
 }

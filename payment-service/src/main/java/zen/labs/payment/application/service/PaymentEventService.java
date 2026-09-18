@@ -51,27 +51,33 @@ public class PaymentEventService implements HandlePaymentEventUseCase {
     @Override
     @Transactional
     public void handleShipmentFailed(String orderId) {
-        paymentDataStore
-                .findByOrderId(orderId)
-                .ifPresentOrElse(
-                        p -> {
-                            paymentDataStore.update(p.withStatus(PaymentStatus.REFUNDED));
-                            log.info("Payment refunded (shipment failed): orderId={}", orderId);
-                        },
-                        () -> log.warn("No payment to refund: orderId={}", orderId));
+        var payment = paymentDataStore.findByOrderId(orderId);
+        if (payment.isPresent()) {
+            if (payment.get().getStatus() == PaymentStatus.REFUNDED) {
+                log.warn("Duplicate SHIPMENT_FAILED event — payment already refunded: orderId={}", orderId);
+                return;
+            }
+            paymentDataStore.update(payment.get().withStatus(PaymentStatus.REFUNDED));
+            log.info("Payment refunded (shipment failed): orderId={}", orderId);
+        } else {
+            log.warn("No payment to refund: orderId={}", orderId);
+        }
         eventPublisher.publishPaymentRefunded(orderId);
     }
 
     @Override
     @Transactional
     public void handleOrderCancellationRequested(String orderId) {
-        paymentDataStore
-                .findByOrderId(orderId)
-                .ifPresentOrElse(
-                        p -> {
-                            paymentDataStore.update(p.withStatus(PaymentStatus.REFUNDED));
-                            log.info("===> Payment refunded (order cancelled): orderId={}", orderId);
-                        },
-                        () -> log.debug("No payment to refund for cancelled order: orderId={}", orderId));
+        var payment = paymentDataStore.findByOrderId(orderId);
+        if (payment.isEmpty()) {
+            log.debug("No payment to refund for cancelled order: orderId={}", orderId);
+            return;
+        }
+        if (payment.get().getStatus() == PaymentStatus.REFUNDED) {
+            log.warn("Duplicate ORDER_CANCELLATION_REQUESTED — payment already refunded: orderId={}", orderId);
+            return;
+        }
+        paymentDataStore.update(payment.get().withStatus(PaymentStatus.REFUNDED));
+        log.info("===> Payment refunded (order cancelled): orderId={}", orderId);
     }
 }

@@ -127,6 +127,23 @@ class PaymentEventServiceTest {
             verify(paymentDataStore, never()).update(any());
             verify(eventPublisher).publishPaymentRefunded(ORDER_ID);
         }
+
+        @Test
+        @DisplayName("should skip update and publish when payment already refunded (idempotent duplicate)")
+        void shouldSkip_whenPaymentAlreadyRefunded() {
+            var existing = Payment.builder()
+                    .orderId(ORDER_ID)
+                    .amount(BigDecimal.TEN)
+                    .status(PaymentStatus.REFUNDED)
+                    .processedAt(Instant.parse("2026-02-20T00:00:00Z"))
+                    .build();
+            when(paymentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handleShipmentFailed(ORDER_ID);
+
+            verify(paymentDataStore, never()).update(any());
+            verify(eventPublisher, never()).publishPaymentRefunded(any());
+        }
     }
 
     @Nested
@@ -156,6 +173,23 @@ class PaymentEventServiceTest {
         @DisplayName("should do nothing when no payment exists")
         void shouldDoNothing_whenNoPayment() {
             when(paymentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.empty());
+
+            service.handleOrderCancellationRequested(ORDER_ID);
+
+            verify(paymentDataStore, never()).update(any());
+            verify(eventPublisher, never()).publishPaymentRefunded(any());
+        }
+
+        @Test
+        @DisplayName("should skip update when payment already refunded (idempotent duplicate)")
+        void shouldSkip_whenPaymentAlreadyRefunded() {
+            var existing = Payment.builder()
+                    .orderId(ORDER_ID)
+                    .amount(BigDecimal.TEN)
+                    .status(PaymentStatus.REFUNDED)
+                    .processedAt(Instant.parse("2026-02-20T00:00:00Z"))
+                    .build();
+            when(paymentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
 
             service.handleOrderCancellationRequested(ORDER_ID);
 

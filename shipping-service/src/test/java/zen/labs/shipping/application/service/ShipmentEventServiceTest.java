@@ -146,5 +146,21 @@ class ShipmentEventServiceTest {
 
             verify(shipmentDataStore, never()).update(any());
         }
+
+        @Test
+        @DisplayName("should skip update when shipment already cancelled (idempotent duplicate)")
+        void shouldSkip_whenShipmentAlreadyCancelled() {
+            var existing = Shipment.builder()
+                    .orderId(ORDER_ID)
+                    .shippingAddress("123 St")
+                    .status(ShipmentStatus.CANCELLED)
+                    .createdAt(Instant.parse("2026-02-20T00:00:00Z"))
+                    .build();
+            when(shipmentDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handleOrderCancellationRequested(ORDER_ID);
+
+            verify(shipmentDataStore, never()).update(any());
+        }
     }
 }

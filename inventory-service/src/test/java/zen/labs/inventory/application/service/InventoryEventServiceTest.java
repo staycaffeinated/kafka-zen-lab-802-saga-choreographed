@@ -120,5 +120,21 @@ class InventoryEventServiceTest {
             verify(reservationDataStore, never()).update(any());
             verify(eventPublisher).publishInventoryReleased(ORDER_ID);
         }
+
+        @Test
+        @DisplayName("should skip update and publish when reservation already released (idempotent duplicate)")
+        void shouldSkip_whenReservationAlreadyReleased() {
+            var existing = InventoryReservation.builder()
+                    .orderId(ORDER_ID)
+                    .status(ReservationStatus.RELEASED)
+                    .reservedAt(Instant.parse("2020-01-01T00:00:00.00Z"))
+                    .build();
+            when(reservationDataStore.findByOrderId(ORDER_ID)).thenReturn(Optional.of(existing));
+
+            service.handleRelease(ORDER_ID);
+
+            verify(reservationDataStore, never()).update(any());
+            verify(eventPublisher, never()).publishInventoryReleased(any());
+        }
     }
 }
