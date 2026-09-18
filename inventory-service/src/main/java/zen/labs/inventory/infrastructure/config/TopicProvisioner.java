@@ -62,7 +62,7 @@ public class TopicProvisioner {
     }
 
     private List<String> topicNames() {
-        return List.of(inventoryEvents, orderEvents, paymentEvents);
+        return List.of(inventoryEvents, orderEvents, paymentEvents, orderEvents + ".dlq", paymentEvents + ".dlq");
     }
 
     /*
