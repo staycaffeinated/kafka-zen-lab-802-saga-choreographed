@@ -34,6 +34,11 @@ public class SagaEventHandler implements HandleSagaEventUseCase {
         if (order.isConfirming() || order.getStatus() == OrderStatus.CANCELLING) {
             orderDataStore.update(order.cancel());
             log.info("Order CANCELLED (inventory released): orderId={}", orderId);
+        } else {
+            log.warn(
+                    "Ignoring INVENTORY_RELEASED — order already in terminal status: {} orderId={}",
+                    order.getStatus(),
+                    orderId);
         }
     }
 
