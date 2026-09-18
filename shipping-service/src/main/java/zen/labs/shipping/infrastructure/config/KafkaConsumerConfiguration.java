@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 [CopyrightOwner]
  */
-package zen.labs.shipping.config;
+package zen.labs.shipping.infrastructure.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.TopicPartition;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 [CopyrightOwner]
  */
-package zen.labs.shipping.config;
+package zen.labs.shipping.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
