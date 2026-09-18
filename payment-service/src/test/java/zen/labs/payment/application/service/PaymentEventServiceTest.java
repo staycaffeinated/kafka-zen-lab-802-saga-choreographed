@@ -151,8 +151,8 @@ class PaymentEventServiceTest {
     class HandleOrderCancellationRequested {
 
         @Test
-        @DisplayName("should refund payment silently when payment exists (no event)")
-        void shouldRefund_whenPaymentFound() {
+        @DisplayName("should refund payment and publish PAYMENT_REFUNDED when payment exists")
+        void shouldRefundAndPublish_whenPaymentFound() {
             var existing = Payment.builder()
                     .orderId(ORDER_ID)
                     .amount(BigDecimal.TEN)
@@ -166,7 +166,7 @@ class PaymentEventServiceTest {
             ArgumentCaptor<Payment> captor = ArgumentCaptor.forClass(Payment.class);
             verify(paymentDataStore).update(captor.capture());
             assertThat(captor.getValue().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
-            verify(eventPublisher, never()).publishPaymentRefunded(any());
+            verify(eventPublisher).publishPaymentRefunded(ORDER_ID);
         }
 
         @Test

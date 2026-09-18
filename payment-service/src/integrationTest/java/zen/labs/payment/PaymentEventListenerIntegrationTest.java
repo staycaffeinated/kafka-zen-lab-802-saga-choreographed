@@ -145,8 +145,8 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
     }
 
     @Test
-    @DisplayName("ORDER_CANCELLATION_REQUESTED event refunds payment silently — no outbox row")
-    void orderCancellationRequested_refundsPaymentSilently() {
+    @DisplayName("ORDER_CANCELLATION_REQUESTED event refunds payment and writes PAYMENT_REFUNDED outbox row")
+    void orderCancellationRequested_refundsPaymentAndWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();
         kafkaTemplate.send(inventoryEventsTopic, orderId, inventoryReservedJson(orderId, "500.00", "123 Main St"));
         await().atMost(10, SECONDS).untilAsserted(() -> assertThat(paymentRepository.findByOrderId(orderId))
@@ -162,10 +162,14 @@ class PaymentEventListenerIntegrationTest extends AbstractPostgresIntegrationTes
             assertThat(payment.get().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
         });
 
-        assertThat(outboxRepository.findAll().stream()
-                        .filter(r -> r.getAggregateId().equals(orderId))
-                        .toList())
-                .isEmpty();
+        await().atMost(10, SECONDS).untilAsserted(() -> {
+            var rows = outboxRepository.findAll().stream()
+                    .filter(r -> r.getAggregateId().equals(orderId))
+                    .toList();
+            assertThat(rows).hasSize(1);
+            assertThat(rows.get(0).getType()).isEqualTo("PAYMENT_REFUNDED");
+            assertThat(rows.get(0).getAggregateType()).isEqualTo(paymentEventsTopic);
+        });
     }
 
     private String inventoryReservedJson(String orderId, String amount, String shippingAddress) {

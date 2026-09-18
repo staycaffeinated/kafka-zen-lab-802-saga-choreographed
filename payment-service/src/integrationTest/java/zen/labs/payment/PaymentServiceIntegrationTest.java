@@ -166,8 +166,9 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("handleOrderCancellationRequested when payment exists refunds it silently")
-    void handleOrderCancellationRequested_withExistingPayment_refundsPayment() {
+    @DisplayName(
+            "handleOrderCancellationRequested when payment exists refunds it and writes PAYMENT_REFUNDED outbox row")
+    void handleOrderCancellationRequested_withExistingPayment_refundsAndWritesOutboxRow() {
         var orderId = "order-" + UUID.randomUUID();
         eventUseCase.handleInventoryReserved(orderId, BigDecimal.valueOf(500), "123 Main St");
         outboxRepository.deleteAll();
@@ -177,7 +178,13 @@ class PaymentServiceIntegrationTest extends AbstractPostgresIntegrationTest {
         var payment = paymentRepository.findByOrderId(orderId);
         assertThat(payment).isPresent();
         assertThat(payment.get().getStatus()).isEqualTo(PaymentStatus.REFUNDED);
-        assertThat(outboxRepository.findAll()).isEmpty();
+
+        var rows = outboxRepository.findAll().stream()
+                .filter(r -> r.getAggregateId().equals(orderId))
+                .toList();
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getType()).isEqualTo("PAYMENT_REFUNDED");
+        assertThat(rows.get(0).getAggregateType()).isEqualTo(paymentEventsTopic);
     }
 
     @Test

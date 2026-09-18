@@ -79,5 +79,6 @@ public class PaymentEventService implements HandlePaymentEventUseCase {
         }
         paymentDataStore.update(payment.get().withStatus(PaymentStatus.REFUNDED));
         log.info("===> Payment refunded (order cancelled): orderId={}", orderId);
+        eventPublisher.publishPaymentRefunded(orderId);
     }
 }
