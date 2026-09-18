@@ -73,11 +73,14 @@ junit-system-rules = { module = "com.github.stefanbirkner:system-rules", version
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 liquibase-core = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
 
+micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel" }
+
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter" }
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mongodb-driver-sync = { module = "org.mongodb:mongodb-driver-sync" }
 
 openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "openApiStarterWebMvc" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 openapi-starter-webflux-ui = { module = "org.springdoc:springdoc-openapi-starter-webflux-ui", version.ref = "openApiStarterWebflux" }
 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }

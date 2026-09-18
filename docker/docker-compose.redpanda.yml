@@ -22,11 +22,14 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
 
 # --- Order service
   order-service:
@@ -42,11 +45,14 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
 
   # --- Payment service
   payment-service:
@@ -62,11 +68,14 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
 
   # --- Shipping service
   shipping-service:
@@ -82,11 +91,24 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+
+# --- Jaeger (distributed tracing — UI at http://localhost:16686)
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    container_name: jaeger
+    networks:
+      - redpanda_network
+    ports:
+      - "4318:4318"   # OTLP HTTP receiver
+      - "16686:16686" # Jaeger UI
 
 # --- Postgres
   postgres:

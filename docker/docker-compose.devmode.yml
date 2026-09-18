@@ -11,6 +11,16 @@ services:
 # --- This compose file intentionally leaves out the command and query services.
 # --- Use this file to spin up the infrastructure while using your IDE to run the applications.
 
+# --- Jaeger (distributed tracing — UI at http://localhost:16686)
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    container_name: jaeger
+    networks:
+      - confluent_network
+    ports:
+      - "4318:4318"   # OTLP HTTP receiver
+      - "16686:16686" # Jaeger UI
+
 # --- Postgres
   postgres:
     image: postgres:${POSTGRES_VERSION:-18}

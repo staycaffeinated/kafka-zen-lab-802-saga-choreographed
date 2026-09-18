@@ -56,6 +56,12 @@ management:
       enabled: true
     readinessState:
       enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
 
 
 # -------------------------------------------------------------------------
@@ -145,6 +151,9 @@ spring:
       client-id: "${spring.application.name}"
       concurrency: 2
       missing-topics-fatal: false
+      observation-enabled: true
+    template:
+      observation-enabled: true
 
   # -------------------------------------------------------------------------
   # Threading
