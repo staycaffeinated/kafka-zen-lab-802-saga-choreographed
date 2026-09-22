@@ -15,7 +15,6 @@ spotless {
         importOrder()           // imports are ordered
         leadingTabsToSpaces(4)
         trimTrailingWhitespace()
-        toggleOffOn()           // enable toggling code formatting with @formatter
     }
     format 'misc', {
         // define the files to apply `misc` to

@@ -49,7 +49,8 @@ version = '1.0.0'
 // Sonar configuration
 // --------------------------------------------------------------------------------
 def ignoredClasses =
-        "**/CorrelationIdFilter.java" +
+        "**/AdapterAutoConfiguration.java" +
+        ",**/CorrelationIdFilter.java" +
         ",**/LoggingFilter.java" +
         ",**/SagaCommandType.java" +
         ",**/SagaReplyType.java" +
