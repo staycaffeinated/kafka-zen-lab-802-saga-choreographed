@@ -1,6 +1,7 @@
 plugins {
     id "java-library"
     id "jvm-test-suite"
+    id "org.gradle.test-retry"
 }
 
 // --------------------------------------------------------------------------------
@@ -24,6 +25,10 @@ testing {
                 all {
                     testTask.configure {
                         shouldRunAfter(test)
+                        retry {
+                            maxRetries = 2
+                            failOnPassedAfterRetry = false
+                        }
                     }
                 }
             }

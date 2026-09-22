@@ -6,6 +6,7 @@ dependencies {
     implementation("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:7.5.0.8588")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.2")
     implementation("com.google.guava:guava:33.4.0-jre")
+    implementation("org.gradle:test-retry-gradle-plugin:1.6.0")
     implementation("se.solrike.sonarlint:sonarlint-gradle-plugin:2.2.0")
     implementation("com.google.cloud.tools:jib-gradle-plugin:3.5.4")
 }
